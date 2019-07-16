@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="jquery-3.4.0.min.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wanda</title>
+    <link href="https://fonts.googleapis.com/css?family=Dosis:500,700" rel="stylesheet" />
+    <link href="style.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="controls">
+        <div id="token-field">
+            <input id="token-input" type="text" placeholder="token" />
+            <button id="btn-set">set</button>
+        </div>
+        <div id="nav">
+            <button id="btn-account">account</button>
+            <button id="btn-chart">chart</button>
+            <button id="btn-trades">trades</button>
+        </div>
+    </div>
+
+    <div id="root"></div>
+    <canvas id="chart" width="400" height="300"></canvas>
+
+    <script src="storage.js"></script>
+    <script src="oanda.js"></script>
+    <script src="page.js"></script>
+    <script src="pageChart.js"></script>
+    <script src="pageTrades.js"></script>
+    <script src="control.js"></script>
+</body>
+</html>
+

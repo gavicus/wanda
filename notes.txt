@@ -1,0 +1,30 @@
+todo
+    fix screen to candle
+    chart-specific dom area
+        instrument selection
+        time frame menu (weekly, daily, etc)
+        show hovered price line and value
+    show ochl of hovered candle
+    show divisions (month or year for week chart, week for day chart etc)
+    drawing tools
+        trend lines
+        horizontals
+    indicators
+        start with moving average
+        will require interface for input and style
+            maybe floating modal
+        indicators list screen
+            do this in html dom not canvas
+            maybe floating modal
+            support hide / show
+    create trade interface
+        click selection for stop loss and profit target
+    price ruler on right edge
+
+done
+    horiz zoom
+    vertical zoom
+    zoom from screen center regardless of focus
+
+
+0c5e2b4138e980df18fc7cec119f65f3-fed87eca6f55a690aea95da7395ab938
