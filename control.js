@@ -2,9 +2,10 @@ class Control {
     constructor(){
         this.root = document.getElementById('root');
         this.oanda = new Oanda();
-        this.pageChart = new PageChart('chart');
+        this.pageChart = new PageChart(this.oanda);
         this.pageTrades = new PageTrades('root');
         this.setupEvents();
+        this.pageChart.init();
     }
 
     clearRoot(){
@@ -18,7 +19,7 @@ class Control {
     };
 
     onBtnChart = event => {
-        this.oanda.getChartInfo('EUR_USD', this.pageChart.init);
+        this.pageChart.init();
     };
 
     onBtnSet = event => {

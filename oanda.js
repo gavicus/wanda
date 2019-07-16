@@ -49,13 +49,18 @@ class Oanda {
         request.send();
     }
 
-    getChartInfo(instrument,callback){
+    getChartInfo(instrument,callback,granularity){
         var path = `v3/instruments/${instrument}/candles`;
         /*
             granularity options:
             https://developer.oanda.com/rest-live/rates/
         */
-        path += '?granularity=W';
+        path += '?granularity='+granularity;
+        this.getData(path, callback);
+    }
+
+    getInstrumentList(callback){
+        var path = `v3/accounts/${this.accountId}/instruments`;
         this.getData(path, callback);
     }
 

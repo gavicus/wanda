@@ -1,6 +1,7 @@
 class PageChart extends Page {
-    constructor(elementId){
-        super(elementId);
+    constructor(oanda){
+        super('chart');
+        this.oanda = oanda;
         this.context = this.root.getContext('2d');
         this.data = null;
         this.high = 0;
@@ -8,6 +9,10 @@ class PageChart extends Page {
         this.focus = {x:0, y:0};
         this.setupEvents();
         this.shiftDown = false;
+        this.instrument = 'EUR_USD';
+        this.timeframe = 'W';
+        this.instrumentData = null;
+        this.hoveredPrice = null;
 
         this.rezRatio = 2;
         this.styleWidth = 400;
@@ -38,10 +43,48 @@ class PageChart extends Page {
         this.low = low;
     }
 
-    init = data => {
+    init = () => {
+        this.requestChartData();
+        this.oanda.getInstrumentList(this.initInstrumentList);
+        var menu = $('#timeframe-menu');
+        var timeframes = ['M','W','D','1H'];
+        for(var tf of timeframes){
+            var option = document.createElement('option');
+            option.setAttribute('value',tf);
+            option.textContent = tf;
+            menu.append(option);
+        }
+        menu.on('change',this.onTimeframeChange);
+    };
+
+    initChartData = data => {
         this.data = data;
         this.autoCenterChart(data.candles);
         this.show();
+    };
+
+    initInstrumentList = data => {
+        this.instrumentData = data;
+        var menu = $('#instrument-menu');
+        this.clearElement(menu);
+        for(var instrument of data.instruments){
+            var option = document.createElement('option');
+            option.setAttribute('value',instrument.name);
+            option.textContent = instrument.displayName;
+            menu.append(option);
+        }
+        menu.on('change',this.onInstrumentChange);
+        $('#instrument-menu').val(this.instrument);
+    };
+
+    onInstrumentChange = event => {
+        this.instrument = event.target.value;
+        this.requestChartData();
+    };
+
+    onTimeframeChange = event => {
+        this.timeframe = event.target.value;
+        this.requestChartData();
     };
 
     onKeyDown = event => {
@@ -67,6 +110,7 @@ class PageChart extends Page {
 
     onMouseMove = event => {
         var current = {x:event.offsetX, y:event.offsetY};
+        this.hoveredPrice = this.screenToPrice(current.y);
         if(this.mouseDown){
             this.mouseDragged = true;
             const delta = {
@@ -81,9 +125,19 @@ class PageChart extends Page {
             this.show();
         } else {
             var candle = this.screenToCandle(current.x);
-            this.hovered = candle;
+            this.hoverCandle(candle);
             this.show();
         }
+    }
+
+    hoverCandle(candle){
+        this.hovered = candle;
+        var message = `o:${candle.mid.o}`;
+        message += ` h:${candle.mid.h}`;
+        message += ` l:${candle.mid.h}`;
+        message += ` c:${candle.mid.c}`;
+        message += ` hovered:${this.hoveredPrice.toFixed(5)}`;
+        $('#chart-message').html(message);
     }
 
     onMouseUp = event => {
@@ -120,6 +174,18 @@ class PageChart extends Page {
         return yValue;
     }
 
+    screenToPrice(yValue){
+        var range = this.high - this.low;
+        var percent = yValue / this.root.height;
+        return this.high - range * percent;
+    }
+
+    requestChartData(){
+        this.oanda.getChartInfo(
+            this.instrument, this.initChartData, this.timeframe
+        );
+    }
+
     resizeChart(){
         $(this.root).css('width',this.styleWidth);
         $(this.root).css('height',this.styleHeight);
@@ -135,12 +201,6 @@ class PageChart extends Page {
         return this.data.candles[index];
     }
 
-    screenToPrice(yValue){
-        var range = this.high - this.low;
-        percent = yValue / this.root.height;
-        return this.high - range * percent;
-    }
-
     setupEvents(){
         var canvas = this.root;
         this.root.addEventListener('mousedown', this.onMouseDown);
@@ -149,6 +209,9 @@ class PageChart extends Page {
         $(this.root).on('mousewheel', this.onMouseWheel);
         $('body').on('keydown', this.onKeyDown);
         $('body').on('keyup', this.onKeyUp);
+        $(document).ready(()=>{
+            $('#timeframe-menu').val(this.timeframe);
+        });
     }
 
     show = data => {

@@ -4,8 +4,12 @@ class Page {
     }
 
     clearRoot(){
-        while(this.root.firstChild){
-            this.root.removeChild(this.root.firstChild);
+        this.clearElement(this.root);
+    }
+
+    clearElement(element){
+        while(element.firstChild){
+            element.removeChild(element.firstChild);
         }
     }
 }
