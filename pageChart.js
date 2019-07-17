@@ -28,8 +28,8 @@ class PageChart extends Page {
             bull: '#2f2',
             bear: '#f22',
             hover: '#fea',
-            priceLine: '#999',
-            dateZone: '#eee',
+            priceLine: '#777',
+            dateZone: '#efefef',
         };
     }
 
@@ -73,6 +73,7 @@ class PageChart extends Page {
     initInstrumentList = data => {
         if(data){
             this.instrumentData = data;
+            console.log(data);
         }
         var pairList = [];
         var stored = this.storage.get('o-instruments');
@@ -297,14 +298,6 @@ class PageChart extends Page {
         if(data){ this.data = data; }
         else{ data = this.data; }
         if(!data){ return; }
-        
-        var pricey = this.priceToScreen(this.hoveredPrice);
-        c.strokeStyle = this.colors.priceLine;
-        c.setLineDash([10,10]);
-        c.moveTo(0,pricey);
-        c.lineTo(this.root.width, pricey);
-        c.stroke();
-        c.setLineDash([]);
 
         var candles = data.candles;
         var columnWidth = this.hZoom;
@@ -319,6 +312,7 @@ class PageChart extends Page {
         var getLeft = i => {
             return getX(i) - (candleWidth/2);
         }
+
         // time divisions
         var dark = true;
         var startIndex = candles.length - 1;
@@ -356,6 +350,16 @@ class PageChart extends Page {
                 startDate = new Date(candles[i].time);
             }
         }
+        
+        // price line
+        var pricey = this.priceToScreen(this.hoveredPrice);
+        c.strokeStyle = this.colors.priceLine;
+        c.setLineDash([10,10]);
+        c.moveTo(0,pricey);
+        c.lineTo(this.root.width, pricey);
+        c.stroke();
+        c.setLineDash([]);
+
         // candles
         for(var i=candles.length-1; i>=0; --i){
             var candle = candles[i];

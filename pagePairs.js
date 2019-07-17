@@ -33,7 +33,7 @@ class PagePairs extends Page {
             checkbox.setAttribute('type','checkbox');
             checkbox.setAttribute('value',instrument.name);
             checkbox.setAttribute('name','instrument');
-            if(stored.indexOf(instrument.name)>-1){
+            if(stored && stored.indexOf(instrument.name)>-1){
                 $(checkbox).prop('checked',true);
             }
             $(checkbox).on('change',this.onCheckbox);
