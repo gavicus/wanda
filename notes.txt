@@ -1,6 +1,11 @@
 todo
+    update chart data each minute
+        clear and set timer each time data is requested
+    show current trade on chart
+        entry level
+        stop loss level
+        current value
     interface for managing personal instrument list
-    show divisions (month or year for week chart, week for day chart etc)
     drawing tools
         trend lines
         horizontals
@@ -17,6 +22,7 @@ todo
     ?price ruler on right edge
 
 done
+    show divisions (month or year for week chart, week for day chart etc)
     show hovered candle's time / date
     show hovered price line and value
     fix screen to price

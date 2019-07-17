@@ -28,6 +28,7 @@ class PageChart extends Page {
             bear: '#f22',
             hover: '#fea',
             priceLine: '#999',
+            dateZone: '#eee',
         };
     }
 
@@ -52,7 +53,7 @@ class PageChart extends Page {
         this.requestChartData();
         this.oanda.getInstrumentList(this.initInstrumentList);
         var menu = $('#timeframe-menu');
-        var timeframes = ['M','W','D','1H'];
+        var timeframes = ['M','W','D','H1'];
         for(var tf of timeframes){
             var option = document.createElement('option');
             option.setAttribute('value',tf);
@@ -94,14 +95,12 @@ class PageChart extends Page {
 
     onKeyDown = event => {
         if(event.key === 'Shift'){
-            console.log('Shift down');
             this.shiftDown = true;
         }
     };
 
     onKeyUp = event => {
         if(event.key === 'Shift'){
-            console.log('Shift up');
             this.shiftDown = false;
         }
     };
@@ -115,7 +114,6 @@ class PageChart extends Page {
 
     onMouseMove = event => {
         var current = {x:event.offsetX, y:event.offsetY};
-        console.log(current);
         this.hoveredPrice = this.screenToPrice(current.y);
         if(this.mouseDown){
             this.mouseDragged = true;
@@ -151,9 +149,7 @@ class PageChart extends Page {
     hoverCandle(candle){
         this.hovered = candle;
         if(!candle){ return; }
-        console.log('candle',candle);
         var d = new Date(candle.time);
-        console.log(d);
         var dateString = (d.getMonth()+1)+'/'+d.getDate();
         if(this.timeframe.length > 1){
             dateString += ` ${d.getHours()}:${d.getMinutes()}`;
@@ -291,14 +287,60 @@ class PageChart extends Page {
         c.stroke();
         c.setLineDash([]);
 
-        
         var candles = data.candles;
         var columnWidth = this.hZoom;
         var candleWidth = columnWidth * 0.5;
         var colors = this.colors;
-        for(var i=candles.length-1; i>=0; --i){
+        var getX = i => {
             var column = candles.length - i;
+            var x = this.root.width - columnWidth * column;
+            x -= this.focus.x;
+            return x
+        }
+        var getLeft = i => {
+            return getX(i) - (candleWidth/2);
+        }
+        // time divisions
+        var dark = true;
+        var startIndex = candles.length - 1;
+        var startCandle = candles[candles.length-1];
+        var startDate = new Date(startCandle.time);
+        c.fillStyle = this.colors.dateZone;
+        var differentZone = (a,b) => {
+            if(this.timeframe === 'H1'){
+                return a.getDate() !== b.getDate();
+            }
+            if(this.timeframe === 'D'){
+                return a.getDay() == 4;
+            }
+            if(this.timeframe === 'W'){
+                return a.getMonth() !== b.getMonth();
+            }
+            if(this.timeframe === 'M'){
+                return a.getYear() !== b.getYear();
+            }
+            return false;
+        }
+        for(var i=candles.length-2; i>=0; --i){
             var candle = candles[i];
+            var thisDate = new Date(candle.time);
+            if(differentZone(thisDate,startDate)){
+                if(dark){
+                    var left = getLeft(i) + candleWidth * 1.5;
+                    var right = getLeft(startIndex) + candleWidth * 1.5;
+                    c.fillRect(
+                        left,0,right-left,this.root.height
+                    );
+                }
+                dark = !dark;
+                startIndex = i;
+                startDate = new Date(candles[i].time);
+            }
+        }
+        // candles
+        for(var i=candles.length-1; i>=0; --i){
+            var candle = candles[i];
+            var column = candles.length - i;
             var candleOpen = parseFloat(candle.mid.o);
             var candleClose = parseFloat(candle.mid.c);
             var bodyColor = candleClose > candleOpen
@@ -306,9 +348,8 @@ class PageChart extends Page {
                 : colors.bear;
             var wickColor = colors.wick;
 
-            var x = this.root.width - columnWidth * column;
-            x -= this.focus.x;
-            var left = x-(candleWidth/2);
+            var x = getX(i);
+            var left = getLeft(i);
             var right = left + candleWidth;
 
             // hover bar
