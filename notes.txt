@@ -1,4 +1,12 @@
 todo
+    indicators
+        start with moving average
+        will require interface for input and style
+            maybe floating modal
+        indicators list screen
+            do this in html dom not canvas
+            maybe floating modal
+            support hide / show
     update chart data each minute
         clear and set timer each time data is requested
     show current trade on chart
@@ -8,14 +16,6 @@ todo
     drawing tools
         trend lines
         horizontals
-    indicators
-        start with moving average
-        will require interface for input and style
-            maybe floating modal
-        indicators list screen
-            do this in html dom not canvas
-            maybe floating modal
-            support hide / show
     create trade interface
         click selection for stop loss and profit target
     ?price ruler on right edge

@@ -7,12 +7,21 @@ class PageIndicators extends Page {
         this.cookieName = 'o-indicators';
         this.readStored();
         this.initForm();
+        this.editForms = [
+            {name:'ma',fields:{periods:'input',color:'color'}}
+        ];
     }
 
     initForm(){
         this.clearElement(this.root);
         var container = document.createElement('div');
         container.setAttribute('id','ind-list');
+        container.setAttribute('class','column');
+        this.root.append(container);
+
+        container = document.createElement('div');
+        container.setAttribute('id','ind-edit');
+        container.setAttribute('class','column');
         this.root.append(container);
     }
 

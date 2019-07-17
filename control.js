@@ -5,6 +5,7 @@ class Control {
         this.pageChart = new PageChart(this.oanda);
         this.pageTrades = new PageTrades('root');
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
+        this.pageIndicators = new PageIndicators(this.indicatorsCallback);
         this.setupEvents();
         this.pageChart.init();
         $('.tab').hide();
@@ -26,6 +27,11 @@ class Control {
         this.pageChart.init();
         $('.tab').hide();
         $('#chart-wrapper').show();
+    };
+
+    onBtnIndicators = event => {
+        $('.tab').hide();
+        $('#page-indicators').show();
     };
 
     onBtnPairs = event => {
@@ -50,6 +56,10 @@ class Control {
     getAccountData(){
         this.oanda.getAccountInfo(this.showAccountData);
     }
+
+    indicatorsCallback = (message) => {
+        console.log('indicatorsCallback',message);
+    };
 
     pairsCallback = (message) => {
         if(message === 'changed'){
@@ -76,6 +86,9 @@ class Control {
         );
         document.getElementById('btn-pairs').addEventListener(
             'click', this.onBtnPairs
+        );
+        document.getElementById('btn-indicators').addEventListener(
+            'click', this.onBtnIndicators
         );
     }
 
