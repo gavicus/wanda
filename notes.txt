@@ -1,5 +1,4 @@
 todo
-    price ruler on right edge
     interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     drawing tools
@@ -15,8 +14,10 @@ todo
             support hide / show
     create trade interface
         click selection for stop loss and profit target
+    ?price ruler on right edge
 
 done
+    show hovered candle's time / date
     show hovered price line and value
     fix screen to price
         fix vertical focus shift

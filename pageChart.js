@@ -151,11 +151,19 @@ class PageChart extends Page {
     hoverCandle(candle){
         this.hovered = candle;
         if(!candle){ return; }
-        var message = `o:${candle.mid.o}`;
+        console.log('candle',candle);
+        var d = new Date(candle.time);
+        console.log(d);
+        var dateString = (d.getMonth()+1)+'/'+d.getDate();
+        if(this.timeframe.length > 1){
+            dateString += ` ${d.getHours()}:${d.getMinutes()}`;
+        }
+        var message = dateString;
+        message += ` o:${candle.mid.o}`;
         message += ` c:${candle.mid.c}`;
         message += ` h:${candle.mid.h}`;
         message += ` l:${candle.mid.l}`;
-        message += `   hovered:${this.hoveredPrice.toFixed(5)}`;
+        message += `   ${this.hoveredPrice.toFixed(5)}`;
         $('#chart-message').html(message);
     }
 
