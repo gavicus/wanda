@@ -7,6 +7,7 @@ class Control {
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
         this.setupEvents();
         this.pageChart.init();
+        $('.tab').hide();
     }
 
     clearRoot(){
@@ -17,13 +18,19 @@ class Control {
 
     onBtnAccount = event => {
         this.getAccountData();
+        $('.tab').hide();
+        $('#root').show();
     };
 
     onBtnChart = event => {
         this.pageChart.init();
+        $('.tab').hide();
+        $('#chart-wrapper').show();
     };
 
     onBtnPairs = event => {
+        $('.tab').hide();
+        $('#page-pairs').show();
     };
 
     onBtnSet = event => {
@@ -36,6 +43,8 @@ class Control {
 
     onBtnTrades = event => {
         this.oanda.getAccountInfo(this.pageTrades.show);
+        $('.tab').hide();
+        $('#root').show();
     }
 
     getAccountData(){
