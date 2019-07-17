@@ -12,6 +12,11 @@ body {
     display: inline-block;
 }
 
+#chart-message {
+    min-width: 10px;
+    height: 14px;
+}
+
 ul {
     list-style-type: none;
     padding: 0;

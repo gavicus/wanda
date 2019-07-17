@@ -14,13 +14,13 @@ class PageChart extends Page {
         this.instrumentData = null;
         this.hoveredPrice = null;
 
-        this.rezRatio = 2;
+        this.rezRatio = 3;
         this.styleWidth = 400;
         this.styleHeight = 300;
         this.resizeChart();
 
         this.vZoom = 1;
-        this.hZoom = 6; // = column width
+        this.hZoom = 10; // = column width
 
         this.colors = {
             wick: '#000',
@@ -142,6 +142,12 @@ class PageChart extends Page {
         }
     }
 
+    onMouseOut = event => {
+        this.mouseDown = false;
+        this.mouseDragged = false;
+        $('#chart-message').html('');
+    };
+
     hoverCandle(candle){
         this.hovered = candle;
         if(!candle){ return; }
@@ -250,6 +256,7 @@ class PageChart extends Page {
         var canvas = this.root;
         this.root.addEventListener('mousedown', this.onMouseDown);
         this.root.addEventListener('mousemove', this.onMouseMove);
+        this.root.addEventListener('mouseout', this.onMouseOut);
         this.root.addEventListener('mouseup', this.onMouseUp);
         $(this.root).on('mousewheel', this.onMouseWheel);
         $('body').on('keydown', this.onKeyDown);
@@ -291,12 +298,12 @@ class PageChart extends Page {
                 : colors.bear;
             var wickColor = colors.wick;
 
-            c.strokeStyle = wickColor;
             var x = this.root.width - columnWidth * column;
             x -= this.focus.x;
             var left = x-(candleWidth/2);
             var right = left + candleWidth;
 
+            // hover bar
             if(candle === this.hovered){
                 c.fillStyle = colors.hover;
                 c.fillRect(
@@ -305,11 +312,16 @@ class PageChart extends Page {
                 );
             }
 
-            c.beginPath();
-            c.moveTo(x,this.priceToScreen(candle.mid.h));
-            c.lineTo(x,this.priceToScreen(candle.mid.l));
-            c.stroke();
+            // wick
+            var wickTop = this.priceToScreen(candle.mid.h);
+            var wickBot = this.priceToScreen(candle.mid.l);
+            c.fillStyle = wickColor;
+            c.fillRect(
+                x-1,wickTop,
+                3,wickBot - wickTop
+            );
 
+            // body
             var closeScreen = this.priceToScreen(candle.mid.c);
             var openScreen = this.priceToScreen(candle.mid.o);
             c.fillStyle = bodyColor;
@@ -318,6 +330,7 @@ class PageChart extends Page {
                 candleWidth, openScreen - closeScreen,
             );
 
+            // candle body caps
             c.beginPath();
             c.moveTo(left,openScreen);
             c.lineTo(right,openScreen);
@@ -328,11 +341,13 @@ class PageChart extends Page {
             c.lineTo(right,closeScreen);
             c.stroke();
 
-            c.font = '20px Verdana';
+            // instrument name
+            var fontSize = 40;
+            c.font = `100 ${fontSize}px Verdana`;
             c.fillStyle = '#888';
             var text = data.instrument.replace('_',' ');
             text = text.toLowerCase();
-            c.fillText(text, 10, 20);
+            c.fillText(text, 10, fontSize);
         }
     }
 }
