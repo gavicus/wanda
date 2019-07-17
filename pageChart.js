@@ -27,6 +27,7 @@ class PageChart extends Page {
             bull: '#2f2',
             bear: '#f22',
             hover: '#fea',
+            priceLine: '#999',
         };
     }
 
@@ -41,6 +42,10 @@ class PageChart extends Page {
         }
         this.high = high;
         this.low = low;
+        
+        // this.focus.y, this.vZoom
+        this.focus.y = this.high;
+        this.vZoom = this.high - this.low;
     }
 
     init = () => {
@@ -110,17 +115,24 @@ class PageChart extends Page {
 
     onMouseMove = event => {
         var current = {x:event.offsetX, y:event.offsetY};
+        console.log(current);
         this.hoveredPrice = this.screenToPrice(current.y);
         if(this.mouseDown){
             this.mouseDragged = true;
+            
             const delta = {
                 x: current.x - this.mouseLast.x,
                 y: current.y - this.mouseLast.y
             };
+            const range = this.getScreenPriceRange();
+            const screenHeight = this.root.height / this.rezRatio;
+            const pricePerPixel = range / screenHeight;
+            var priceShift = delta.y * pricePerPixel;
             this.focus = {
                 x:this.focus.x - delta.x * this.rezRatio,
-                y:this.focus.y - delta.y * this.rezRatio
+                y:this.focus.y + priceShift
             };
+
             this.mouseLast = current;
             this.show();
         } else {
@@ -134,10 +146,10 @@ class PageChart extends Page {
         this.hovered = candle;
         if(!candle){ return; }
         var message = `o:${candle.mid.o}`;
-        message += ` h:${candle.mid.h}`;
-        message += ` l:${candle.mid.h}`;
         message += ` c:${candle.mid.c}`;
-        message += ` hovered:${this.hoveredPrice.toFixed(5)}`;
+        message += ` h:${candle.mid.h}`;
+        message += ` l:${candle.mid.l}`;
+        message += `   hovered:${this.hoveredPrice.toFixed(5)}`;
         $('#chart-message').html(message);
     }
 
@@ -154,29 +166,47 @@ class PageChart extends Page {
             var min = 4;
             if(this.hZoom < min){ this.hZoom = min; }
         } else {
-            this.vZoom -= delta * .003;
+            var perPix = this.getPricePerPixel();
+            var zoomChange = delta * perPix;
+            this.vZoom += zoomChange;
+            this.focus.y += zoomChange / 2;
+
+            const minZoom = 0;
+            if(this.vZoom < minZoom){ this.vZoom = minZoom; }
         }
         this.show();
     };
 
+    getPriceAtScreenTop(){
+        return this.focus.y;
+    }
+
+    getPricePerPixel(){
+        return this.getScreenPriceRange() / this.getVisualScreenHeight();
+    }
+
+    getVisualScreenHeight(){
+        return this.root.height / this.rezRatio;
+    }
+
+    getScreenPriceRange(){
+        return this.vZoom;
+    }
+
     priceToScreen(price){
-        var range = this.high - this.low;
-        var aboveLow = price - this.low;
-        var percent = aboveLow / range;
-        var screenHeight = this.root.height;
-        var pixels = Math.floor(screenHeight * percent);
-        var yValue = screenHeight - pixels;
-
-        yValue -= this.focus.y;
-
-        var middle = this.root.height / 2;
-        var fromMiddle = yValue - middle;
-        yValue = middle + fromMiddle * this.vZoom;
-
-        return yValue;
+        var atTop = this.getPriceAtScreenTop();
+        var range = this.getScreenPriceRange();
+        var priceBelowHigh = atTop - price;
+        var percentDown = priceBelowHigh / range;
+        return this.root.height * percentDown;
     }
 
     screenToPrice(yValue){
+        var atTop = this.getPriceAtScreenTop();
+        var range = this.getScreenPriceRange();
+        var percentDown = yValue / (this.root.height / this.rezRatio);
+        return atTop - range * percentDown;
+
         // de-zoom
         var middle = this.root.height / 2;
         var fromMiddle = yValue - middle;
@@ -207,7 +237,6 @@ class PageChart extends Page {
     }
 
     screenToCandle(xValue){
-        console.log(this.focus);
         if(!this.data){ return null; }
         var fromRight = this.root.width - xValue * this.rezRatio;
         fromRight -= this.focus.x;
@@ -238,8 +267,17 @@ class PageChart extends Page {
         if(data){ this.data = data; }
         else{ data = this.data; }
         if(!data){ return; }
-        var candles = data.candles;
+        
+        var pricey = this.priceToScreen(this.hoveredPrice);
+        c.strokeStyle = this.colors.priceLine;
+        c.setLineDash([10,10]);
+        c.moveTo(0,pricey);
+        c.lineTo(this.root.width, pricey);
+        c.stroke();
+        c.setLineDash([]);
 
+        
+        var candles = data.candles;
         var columnWidth = this.hZoom;
         var candleWidth = columnWidth * 0.5;
         var colors = this.colors;

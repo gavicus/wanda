@@ -1,5 +1,4 @@
 todo
-    show hovered price line and value
     interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     drawing tools
@@ -18,6 +17,12 @@ todo
     price ruler on right edge
 
 done
+    show hovered price line and value
+    fix screen to price
+        fix vertical focus shift
+        fix vertical zoom
+    fix vertical focus drag doesn't scale with zoom
+    don't allow negative vertical scale (flips chart)
     fix screen to candle
     chart-specific dom area
         show ochl of hovered candle
