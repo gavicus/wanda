@@ -1,6 +1,5 @@
 todo
     show hovered price line and value
-    fix screen to candle
     interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     drawing tools
@@ -19,6 +18,7 @@ todo
     price ruler on right edge
 
 done
+    fix screen to candle
     chart-specific dom area
         show ochl of hovered candle
         make chart active from start

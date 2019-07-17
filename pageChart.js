@@ -20,7 +20,7 @@ class PageChart extends Page {
         this.resizeChart();
 
         this.vZoom = 1;
-        this.hZoom = 6;
+        this.hZoom = 6; // = column width
 
         this.colors = {
             wick: '#000',
@@ -132,6 +132,7 @@ class PageChart extends Page {
 
     hoverCandle(candle){
         this.hovered = candle;
+        if(!candle){ return; }
         var message = `o:${candle.mid.o}`;
         message += ` h:${candle.mid.h}`;
         message += ` l:${candle.mid.h}`;
@@ -165,6 +166,7 @@ class PageChart extends Page {
         var screenHeight = this.root.height;
         var pixels = Math.floor(screenHeight * percent);
         var yValue = screenHeight - pixels;
+
         yValue -= this.focus.y;
 
         var middle = this.root.height / 2;
@@ -175,9 +177,20 @@ class PageChart extends Page {
     }
 
     screenToPrice(yValue){
+        // de-zoom
+        var middle = this.root.height / 2;
+        var fromMiddle = yValue - middle;
+        yValue = middle + fromMiddle / this.vZoom;
+
+        // de-focus
+        yValue += this.focus.y;
+
         var range = this.high - this.low;
-        var percent = yValue / this.root.height;
-        return this.high - range * percent;
+        //var percent = yValue / this.root.height;
+        //return this.high - range * percent;
+        var h = this.root.height;
+        //return range * yValue + range * h + this.low * h;
+        return (range*(yValue+h) + h*this.low) / h;
     }
 
     requestChartData(){
@@ -194,8 +207,11 @@ class PageChart extends Page {
     }
 
     screenToCandle(xValue){
+        console.log(this.focus);
         if(!this.data){ return null; }
         var fromRight = this.root.width - xValue * this.rezRatio;
+        fromRight -= this.focus.x;
+        fromRight += this.hZoom / 2;
         var columnFromRight = Math.floor(fromRight / this.hZoom);
         var index = this.data.candles.length - columnFromRight;
         return this.data.candles[index];
