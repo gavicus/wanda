@@ -1,5 +1,4 @@
 todo
-    interface for managing personal instrument list
     update chart data each minute
         clear and set timer each time data is requested
     show current trade on chart
@@ -22,6 +21,7 @@ todo
     ?price ruler on right edge
 
 done
+    interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     show hovered candle's time / date
     show hovered price line and value
