@@ -4,6 +4,7 @@ class Control {
         this.oanda = new Oanda();
         this.pageChart = new PageChart(this.oanda);
         this.pageTrades = new PageTrades('root');
+        this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
         this.setupEvents();
         this.pageChart.init();
     }
@@ -22,6 +23,9 @@ class Control {
         this.pageChart.init();
     };
 
+    onBtnPairs = event => {
+    };
+
     onBtnSet = event => {
         const input = document.getElementById('token-input');
         this.setToken(input.value);
@@ -37,6 +41,12 @@ class Control {
     getAccountData(){
         this.oanda.getAccountInfo(this.showAccountData);
     }
+
+    pairsCallback = (message) => {
+        if(message === 'changed'){
+            this.pageChart.initInstrumentList();
+        }
+    };
 
     setToken(t){
         this.oanda.setToken(t);
@@ -54,6 +64,9 @@ class Control {
         );
         document.getElementById('btn-trades').addEventListener(
             'click', this.onBtnTrades
+        );
+        document.getElementById('btn-pairs').addEventListener(
+            'click', this.onBtnPairs
         );
     }
 

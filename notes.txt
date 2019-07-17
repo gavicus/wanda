@@ -1,11 +1,11 @@
 todo
+    interface for managing personal instrument list
     update chart data each minute
         clear and set timer each time data is requested
     show current trade on chart
         entry level
         stop loss level
         current value
-    interface for managing personal instrument list
     drawing tools
         trend lines
         horizontals

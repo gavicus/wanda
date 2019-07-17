@@ -15,24 +15,29 @@
             <button id="btn-set">set</button>
         </div>
         <div id="nav">
-            <button id="btn-account">account</button>
             <button id="btn-chart">chart</button>
+            <button id="btn-pairs">pairs</button>
             <button id="btn-trades">trades</button>
+            <button id="btn-account">account</button>
         </div>
     </div>
 
     <div id="root"></div>
-    <div id="chart-controls">
-        <select id="instrument-menu"></select>
-        <select id="timeframe-menu"></select>
-        <div id="chart-message"></div>
+    <div id="chart-wrapper">
+        <div id="chart-controls">
+            <select id="instrument-menu"></select>
+            <select id="timeframe-menu"></select>
+            <div id="chart-message"></div>
+        </div>
+        <canvas id="chart"></canvas>
     </div>
-    <canvas id="chart" width="400" height="300"></canvas>
+    <div id="page-pairs"></div>
 
     <script src="storage.js"></script>
     <script src="oanda.js"></script>
     <script src="page.js"></script>
     <script src="pageChart.js"></script>
+    <script src="pagePairs.js"></script>
     <script src="pageTrades.js"></script>
     <script src="control.js"></script>
 </body>

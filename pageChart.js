@@ -13,6 +13,7 @@ class PageChart extends Page {
         this.timeframe = 'W';
         this.instrumentData = null;
         this.hoveredPrice = null;
+        this.storage = new Storage();
 
         this.rezRatio = 3;
         this.styleWidth = 400;
@@ -70,17 +71,32 @@ class PageChart extends Page {
     };
 
     initInstrumentList = data => {
-        this.instrumentData = data;
+        if(data){
+            this.instrumentData = data;
+        }
+        var pairList = [];
+        var stored = this.storage.get('o-instruments');
+        if(stored){
+            pairList = stored.split(',');
+        }else{
+            if(data){
+                pairList = data.instruments.map(i=>i.name);
+            }
+        }
         var menu = $('#instrument-menu');
-        this.clearElement(menu);
-        for(var instrument of data.instruments){
+        this.clearElement(menu[0]);
+        for(var pair of pairList){
             var option = document.createElement('option');
-            option.setAttribute('value',instrument.name);
-            option.textContent = instrument.displayName;
+            option.setAttribute('value',pair);
+            option.textContent = pair.replace('_','/');
             menu.append(option);
         }
         menu.on('change',this.onInstrumentChange);
         $('#instrument-menu').val(this.instrument);
+
+        menu.val(pairList[0]);
+        this.instrument = pairList[0];
+        this.requestChartData();
     };
 
     onInstrumentChange = event => {
@@ -209,6 +225,9 @@ class PageChart extends Page {
         var priceBelowHigh = atTop - price;
         var percentDown = priceBelowHigh / range;
         return this.root.height * percentDown;
+    }
+
+    resetInstrumentList(){
     }
 
     screenToPrice(yValue){
