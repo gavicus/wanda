@@ -1,5 +1,4 @@
 todo
-    show current price
     show current trade on chart
         entry level
         stop loss level
@@ -12,6 +11,7 @@ todo
     ?price ruler on right edge
 
 done
+    show current price
     update chart data each minute
         clear and set timer each time data is requested
     indicators

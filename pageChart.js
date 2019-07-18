@@ -32,6 +32,7 @@ class PageChart extends Page {
             bear: '#f22',
             hover: '#fea',
             priceLine: '#777',
+            currentPrice: '#68f',
             dateZone: '#efefef',
         };
         
@@ -40,7 +41,6 @@ class PageChart extends Page {
 
     autoCenterChart(){
         var candles = this.data.candles;
-        console.log('autoCenterChart',candles);
         var high = 0;
         var low = 0;
         for(var candle of candles){
@@ -72,9 +72,9 @@ class PageChart extends Page {
     };
 
     initChartData = data => {
+        console.log('data',data);
         this.data = data;
         this.dataUpdated = new Date();
-        console.log('dataUpdated',this.dataUpdated);
         this.show();
     };
 
@@ -306,7 +306,6 @@ class PageChart extends Page {
     }
 
     show = data => {
-        console.log('show',this.focus);
         var c = this.context;
         c.fillStyle = '#fafafa';
         c.fillRect(0,0,this.root.width,this.root.height);
@@ -437,6 +436,8 @@ class PageChart extends Page {
             text = text.toLowerCase();
             c.fillText(text, 10, fontSize);
         }
+
+        // indicators
         var indicators = this.pageIndicators.indicators;
         for(var indicator of indicators){
             if(!indicator.getShown()){ continue; }
@@ -467,5 +468,30 @@ class PageChart extends Page {
                 c.stroke();
             }
         }
+
+        // current price
+        var lastCandle = candles[candles.length-1];
+        var currentPrice = lastCandle.mid.c;
+        var pricey = this.priceToScreen(currentPrice);
+        c.strokeStyle = this.colors.currentPrice;
+        c.setLineDash([10,10]);
+        c.moveTo(0,pricey);
+        c.lineTo(this.root.width, pricey);
+        c.stroke();
+        c.setLineDash([]);
+
+        var fontSize = 32;
+        pricey += fontSize * 1/3;
+        c.font = `100 ${fontSize}px Verdana`;
+        var message = '' + currentPrice;
+
+        c.fillStyle = '#777';
+        var size = c.measureText(message);
+        var width = size.width;
+        var x = this.root.width - width;
+        c.fillRect(x,pricey-fontSize+2,width,fontSize+1);
+
+        c.fillStyle = '#fff';
+        c.fillText(message, x, pricey);
     }
 }
