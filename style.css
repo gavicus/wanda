@@ -34,7 +34,40 @@ ul {
     padding-right: 20px;
 }
 
+#page-indicators {
+    display: flex;
+    justify-content: space-around;
+}
+
+#page-indicators .item {
+    cursor: pointer;
+}
+
 .hidden {
     display: none;
+}
+
+.color-box {
+    width: 17px;
+    height: 17px;
+    border: 1px solid gray;
+    margin-left: 5px;
+    margin-bottom: -5px;
+}
+
+.form-field {
+    margin-top: 5px;
+}
+
+.form-field input {
+    margin-left: 10px;
+}
+
+.form-field .color-box {
+    display: inline-block;
+}
+
+.column {
+    display: inline-block;
 }
 

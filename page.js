@@ -8,6 +8,9 @@ class Page {
     }
 
     clearElement(element){
+        if(element[0]){
+            element = element[0];
+        }
         while(element.firstChild){
             element.removeChild(element.firstChild);
         }

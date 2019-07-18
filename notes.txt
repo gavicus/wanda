@@ -1,12 +1,5 @@
 todo
-    indicators
-        start with moving average
-        will require interface for input and style
-            maybe floating modal
-        indicators list screen
-            do this in html dom not canvas
-            maybe floating modal
-            support hide / show
+    indicators: support hide / show
     update chart data each minute
         clear and set timer each time data is requested
     show current trade on chart
@@ -21,6 +14,11 @@ todo
     ?price ruler on right edge
 
 done
+    indicators
+        show moving average on chart
+        will require interface for input and style
+        indicators list screen
+            do this in html dom not canvas
     interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     show hovered candle's time / date

@@ -2,10 +2,10 @@ class Control {
     constructor(){
         this.root = document.getElementById('root');
         this.oanda = new Oanda();
-        this.pageChart = new PageChart(this.oanda);
+        this.pageIndicators = new PageIndicators(this.indicatorsCallback);
+        this.pageChart = new PageChart(this.oanda, this.pageIndicators);
         this.pageTrades = new PageTrades('root');
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
-        this.pageIndicators = new PageIndicators(this.indicatorsCallback);
         this.setupEvents();
         this.pageChart.init();
         $('.tab').hide();
@@ -102,9 +102,6 @@ class Control {
             'trades','marginUsed','marginAvailable',
             'withdrawlLimit',
         ];
-        for(var key of keys){ console.log('key',key) }
-        //console.log('positions',account.positions);
-        console.log('trades',account.trades);
         for(var key of wanted){
             var li = document.createElement('li');
             li.textContent = key + ': ' + account[key];

@@ -1,7 +1,8 @@
 class PageChart extends Page {
-    constructor(oanda){
+    constructor(oanda, pageIndicators){
         super('chart');
         this.oanda = oanda;
+        this.pageIndicators = pageIndicators;
         this.context = this.root.getContext('2d');
         this.data = null;
         this.high = 0;
@@ -73,7 +74,6 @@ class PageChart extends Page {
     initInstrumentList = data => {
         if(data){
             this.instrumentData = data;
-            console.log(data);
         }
         var pairList = [];
         var stored = this.storage.get('o-instruments');
@@ -420,6 +420,35 @@ class PageChart extends Page {
             var text = data.instrument.replace('_',' ');
             text = text.toLowerCase();
             c.fillText(text, 10, fontSize);
+        }
+        var indicators = this.pageIndicators.indicators;
+        for(var indicator of indicators){
+            var name = indicator.getName();
+            if(name === 'ma'){
+                var periods = parseInt(indicator.get('periods'));
+                var pool = [];
+                var first = true;
+                c.beginPath();
+                c.lineWidth = 3;
+                for(var i in candles){
+                    pool.push(candles[i]);
+                    if(pool.length < periods){ continue; }
+                    if(pool.length > periods){ pool.shift(i); }
+                    var prices = pool.map(c=>parseFloat(c.mid.c));
+                    var sum = prices.reduce((a,b)=>a+b);
+                    var avg = sum / pool.length;
+                    var x = getX(i);
+                    var y = this.priceToScreen(avg);
+                    c.strokeStyle = '#'+indicator.get('color');
+                    if(first){
+                        c.moveTo(x,y);
+                        first = false;
+                    } else {
+                        c.lineTo(x,y);
+                    }
+                }
+                c.stroke();
+            }
         }
     }
 }
