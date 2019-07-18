@@ -27,11 +27,22 @@ class PageIndicators extends Page {
         return this.editForms.find(f => f.name === type);
     }
 
+    getFormString(){
+        var typeMenu = $('#type-menu')[0];
+        var name = typeMenu.value;
+        var formArray = [`name:${name}`];
+        var inputs = $('.form-field input');
+        for(var input of inputs){
+            if(!input.value){ return false; }
+            formArray.push(input.name + ':' + input.value);
+        }
+        return formArray.join(',');
+    }
+
     getTypeMenu(){
         var menu = document.createElement('select');
         menu.setAttribute('id','type-menu');
         $(menu).on('change',this.onTypeMenuChange);
-        console.log('this.editForms',this.editForms);
         for(var type of this.editForms){
             var option = document.createElement('option');
             option.setAttribute('value',type.name);
@@ -66,7 +77,20 @@ class PageIndicators extends Page {
         var container = $('#form-container');
         this.clearElement(container);
         var form = this.getEditForm(type);
+
+        var field = document.createElement('div');
+        var shown = document.createElement('input');
+        shown.setAttribute('type','checkbox');
+        shown.setAttribute('id','shown');
+        $(shown).on('change',this.onClickShown);
+        field.append(shown);
+        var shownLabel = document.createElement('span');
+        shownLabel.textContent = 'shown';
+        field.append(shownLabel);
+        container.append(field);
+
         for(var fieldName of Object.keys(form.fields)){
+            if(fieldName==='shown'){ continue; }
             var fieldType = form.fields[fieldName];
             var field = document.createElement('div');
             field.setAttribute('class','form-field');
@@ -105,6 +129,12 @@ class PageIndicators extends Page {
         this.populateForm(indicator);
     };
 
+    onClickShown = event => {
+        var indicator = this.indicators[this.selectedIndex];
+        indicator.fields['shown'] = event.target.checked;
+        this.writeToStored();
+    };
+
     onColorChange = (event, colorBoxId) => {
         var code = event.target.value;
         if(code.length < 3){ code = '#fff'; }
@@ -113,25 +143,11 @@ class PageIndicators extends Page {
     };
 
     onNewButton = event => {
-        console.log('onNewButton');
         this.selectedIndex = -1;
         this.boldSelected();
         $('#form-container input').val('');
         $('#form-container input').change();
     };
-
-    getFormString(){
-        var typeMenu = $('#type-menu')[0];
-        console.log('typeMenu',typeMenu);
-        var name = typeMenu.value;
-        var formArray = [`name:${name}`];
-        var inputs = $('.form-field input');
-        for(var input of inputs){
-            if(!input.value){ return false; }
-            formArray.push(input.name + ':' + input.value);
-        }
-        return formArray.join(',');
-    }
 
     onSubmitButton = event => {
         var formString = this.getFormString();
@@ -166,6 +182,7 @@ class PageIndicators extends Page {
             elem.val(item.fields[key]);
             elem.change();
         }
+        $('#shown').prop('checked',item.getShown());
     }
 
     populateList(){

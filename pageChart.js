@@ -423,6 +423,7 @@ class PageChart extends Page {
         }
         var indicators = this.pageIndicators.indicators;
         for(var indicator of indicators){
+            if(!indicator.getShown()){ continue; }
             var name = indicator.getName();
             if(name === 'ma'){
                 var periods = parseInt(indicator.get('periods'));

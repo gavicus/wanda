@@ -26,6 +26,13 @@ class Indicator {
 
     getName(){ return this.fields.name; }
 
+    getShown(){
+        if('shown' in this.fields){
+            return this.fields.shown;
+        }
+        return true;
+    }
+
     toString(){
         var fieldArray = [];
         for(var key of Object.keys(this.fields)){

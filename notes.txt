@@ -1,5 +1,4 @@
 todo
-    indicators: support hide / show
     update chart data each minute
         clear and set timer each time data is requested
     show current trade on chart
@@ -19,6 +18,7 @@ done
         will require interface for input and style
         indicators list screen
             do this in html dom not canvas
+        support hide / show for each indicator
     interface for managing personal instrument list
     show divisions (month or year for week chart, week for day chart etc)
     show hovered candle's time / date
