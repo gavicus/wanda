@@ -24,7 +24,8 @@ class Control {
     };
 
     onBtnChart = event => {
-        this.pageChart.init();
+        this.pageChart.autoCenterChart();
+        this.pageChart.show();
         $('.tab').hide();
         $('#chart-wrapper').show();
     };

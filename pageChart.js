@@ -15,6 +15,8 @@ class PageChart extends Page {
         this.instrumentData = null;
         this.hoveredPrice = null;
         this.storage = new Storage();
+        this.refreshTimer = null;
+        this.dataUpdated = null;
 
         this.rezRatio = 3;
         this.styleWidth = 400;
@@ -32,9 +34,13 @@ class PageChart extends Page {
             priceLine: '#777',
             dateZone: '#efefef',
         };
+        
+        this.init();
     }
 
-    autoCenterChart(candles){
+    autoCenterChart(){
+        var candles = this.data.candles;
+        console.log('autoCenterChart',candles);
         var high = 0;
         var low = 0;
         for(var candle of candles){
@@ -67,7 +73,8 @@ class PageChart extends Page {
 
     initChartData = data => {
         this.data = data;
-        this.autoCenterChart(data.candles);
+        this.dataUpdated = new Date();
+        console.log('dataUpdated',this.dataUpdated);
         this.show();
     };
 
@@ -253,10 +260,18 @@ class PageChart extends Page {
         return (range*(yValue+h) + h*this.low) / h;
     }
 
-    requestChartData(){
-        this.oanda.getChartInfo(
-            this.instrument, this.initChartData, this.timeframe
-        );
+    requestChartData = () => {
+        if(this.oanda){
+            this.oanda.getChartInfo(
+                this.instrument, this.initChartData, this.timeframe
+            );
+            if(this.refreshTimer){
+                clearTimeout(this.refreshTimer);
+            }
+            this.refreshTimer = setTimeout(
+                this.requestChartData, 20000
+            );
+        }
     }
 
     resizeChart(){
@@ -291,6 +306,7 @@ class PageChart extends Page {
     }
 
     show = data => {
+        console.log('show',this.focus);
         var c = this.context;
         c.fillStyle = '#fafafa';
         c.fillRect(0,0,this.root.width,this.root.height);
