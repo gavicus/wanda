@@ -269,7 +269,7 @@ class PageChart extends Page {
                 clearTimeout(this.refreshTimer);
             }
             this.refreshTimer = setTimeout(
-                this.requestChartData, 20000
+                this.requestChartData, 60000
             );
         }
     }
