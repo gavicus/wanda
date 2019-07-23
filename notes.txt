@@ -3,6 +3,7 @@ todo
         entry level
         stop loss level
         current value
+    click entry on trades page to go to that pair on chart
     drawing tools
         trend lines
         horizontals
@@ -11,6 +12,9 @@ todo
     ?price ruler on right edge
 
 done
+    indicators should compute data points only once
+        each time the data is updated
+        and stored in an array on the indicator object
     show current price
     update chart data each minute
         clear and set timer each time data is requested

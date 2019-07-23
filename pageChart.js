@@ -72,9 +72,9 @@ class PageChart extends Page {
     };
 
     initChartData = data => {
-        console.log('data',data);
         this.data = data;
         this.dataUpdated = new Date();
+        this.computeIndicators();
         this.show();
     };
 
@@ -274,6 +274,28 @@ class PageChart extends Page {
         }
     }
 
+    computeIndicators(){
+        var candles = this.data.candles;
+        var indicators = this.pageIndicators.indicators;
+        for(var indicator of indicators){
+            indicator.values = [];
+            var name = indicator.getName();
+            if(name === 'ma'){
+                var periods = parseInt(indicator.get('periods'));
+                var pool = [];
+                for(var i in candles){
+                    pool.push(candles[i]);
+                    if(pool.length < periods){ continue; }
+                    if(pool.length > periods){ pool.shift(i); }
+                    var prices = pool.map(c=>parseFloat(c.mid.c));
+                    var sum = prices.reduce((a,b)=>a+b);
+                    var avg = sum / pool.length;
+                    indicator.values[i] = avg;
+                }
+            }
+        }
+    }
+
     resizeChart(){
         $(this.root).css('width',this.styleWidth);
         $(this.root).css('height',this.styleHeight);
@@ -305,6 +327,13 @@ class PageChart extends Page {
         });
     }
 
+    getX(i) {
+        var column = this.data.candles.length - i;
+        var x = this.root.width - this.hZoom * column;
+        x -= this.focus.x;
+        return x
+    }
+
     show = data => {
         var c = this.context;
         c.fillStyle = '#fafafa';
@@ -318,14 +347,8 @@ class PageChart extends Page {
         var columnWidth = this.hZoom;
         var candleWidth = columnWidth * 0.5;
         var colors = this.colors;
-        var getX = i => {
-            var column = candles.length - i;
-            var x = this.root.width - columnWidth * column;
-            x -= this.focus.x;
-            return x
-        }
         var getLeft = i => {
-            return getX(i) - (candleWidth/2);
+            return this.getX(i) - (candleWidth/2);
         }
 
         // time divisions
@@ -386,7 +409,7 @@ class PageChart extends Page {
                 : colors.bear;
             var wickColor = colors.wick;
 
-            var x = getX(i);
+            var x = this.getX(i);
             var left = getLeft(i);
             var right = left + candleWidth;
 
@@ -443,27 +466,18 @@ class PageChart extends Page {
             if(!indicator.getShown()){ continue; }
             var name = indicator.getName();
             if(name === 'ma'){
-                var periods = parseInt(indicator.get('periods'));
-                var pool = [];
-                var first = true;
                 c.beginPath();
                 c.lineWidth = 3;
-                for(var i in candles){
-                    pool.push(candles[i]);
-                    if(pool.length < periods){ continue; }
-                    if(pool.length > periods){ pool.shift(i); }
-                    var prices = pool.map(c=>parseFloat(c.mid.c));
-                    var sum = prices.reduce((a,b)=>a+b);
-                    var avg = sum / pool.length;
-                    var x = getX(i);
+                var first = true;
+                for(var i in indicator.values){
+                    var avg = indicator.values[i];
+                    var x = this.getX(i);
                     var y = this.priceToScreen(avg);
                     c.strokeStyle = '#'+indicator.get('color');
                     if(first){
                         c.moveTo(x,y);
                         first = false;
-                    } else {
-                        c.lineTo(x,y);
-                    }
+                    } else { c.lineTo(x,y); }
                 }
                 c.stroke();
             }
