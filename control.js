@@ -4,7 +4,7 @@ class Control {
         this.oanda = new Oanda();
         this.pageIndicators = new PageIndicators(this.indicatorsCallback);
         this.pageChart = new PageChart(this.oanda, this.pageIndicators);
-        this.pageTrades = new PageTrades('root');
+        this.pageTrades = new PageTrades(this.tradesCallback);
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
         this.setupEvents();
         this.pageChart.init();
@@ -66,6 +66,12 @@ class Control {
         if(message === 'changed'){
             this.pageChart.initInstrumentList();
         }
+    };
+
+    tradesCallback = (message,data) => {
+        console.log('tradesCallback', message,data);
+        this.pageChart.setInstrument(data);
+        this.onBtnChart();
     };
 
     setToken(t){

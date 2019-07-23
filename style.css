@@ -71,3 +71,8 @@ ul {
     display: inline-block;
 }
 
+.trade-entry:hover {
+    cursor: pointer;
+    color: blue;
+}
+

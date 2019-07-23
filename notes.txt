@@ -3,15 +3,14 @@ todo
         entry level
         stop loss level
         current value
-    click entry on trades page to go to that pair on chart
     drawing tools
         trend lines
         horizontals
     create trade interface
         click selection for stop loss and profit target
-    ?price ruler on right edge
 
 done
+    click entry on trades page to go to that pair on chart
     indicators should compute data points only once
         each time the data is updated
         and stored in an array on the indicator object

@@ -1,10 +1,16 @@
 class PageTrades extends Page {
-    constructor(elementId){
-        super(elementId);
+    constructor(callback){
+        super('root');
+        this.callback = callback;
     }
 
+    onClickEntry = event => {
+        var children = event.target.parentElement.children;
+        var instrument = children[1].innerHTML;
+        this.callback('show-chart',instrument);
+    };
+
     show = data => {
-        const ul = document.createElement('ul');
         const account = data.account;
         const trades = account.trades;
         console.log('trades',trades);
@@ -22,6 +28,8 @@ class PageTrades extends Page {
         table.appendChild(thead);
         for(var trade of trades){
             var tr = document.createElement('tr');
+            tr.setAttribute('class','trade-entry');
+            $(tr).on('click', this.onClickEntry);
 
             var tdid = document.createElement('td');
             tdid.textContent = trade.id;

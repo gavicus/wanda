@@ -75,6 +75,7 @@ class PageChart extends Page {
         this.data = data;
         this.dataUpdated = new Date();
         this.computeIndicators();
+        this.autoCenterChart();
         this.show();
     };
 
@@ -108,8 +109,7 @@ class PageChart extends Page {
     };
 
     onInstrumentChange = event => {
-        this.instrument = event.target.value;
-        this.requestChartData();
+        this.setInstrument(event.target.value);
     };
 
     onTimeframeChange = event => {
@@ -243,20 +243,12 @@ class PageChart extends Page {
         var range = this.getScreenPriceRange();
         var percentDown = yValue / (this.root.height / this.rezRatio);
         return atTop - range * percentDown;
-
-        // de-zoom
         var middle = this.root.height / 2;
         var fromMiddle = yValue - middle;
         yValue = middle + fromMiddle / this.vZoom;
-
-        // de-focus
         yValue += this.focus.y;
-
         var range = this.high - this.low;
-        //var percent = yValue / this.root.height;
-        //return this.high - range * percent;
         var h = this.root.height;
-        //return range * yValue + range * h + this.low * h;
         return (range*(yValue+h) + h*this.low) / h;
     }
 
@@ -268,8 +260,9 @@ class PageChart extends Page {
             if(this.refreshTimer){
                 clearTimeout(this.refreshTimer);
             }
+            var seconds = 60;
             this.refreshTimer = setTimeout(
-                this.requestChartData, 60000
+                this.requestChartData, seconds * 1000
             );
         }
     }
@@ -313,6 +306,11 @@ class PageChart extends Page {
         return this.data.candles[index];
     }
 
+    setInstrument(name){
+        this.instrument = name;
+        this.requestChartData();
+    }
+
     setupEvents(){
         var canvas = this.root;
         this.root.addEventListener('mousedown', this.onMouseDown);
@@ -335,6 +333,9 @@ class PageChart extends Page {
     }
 
     show = data => {
+        
+        console.log('show',data);
+
         var c = this.context;
         c.fillStyle = '#fafafa';
         c.fillRect(0,0,this.root.width,this.root.height);
