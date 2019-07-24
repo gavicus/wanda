@@ -63,8 +63,10 @@ class PageChart extends Page {
 
     testChartData(){
         const pair = 'GBP_CAD';
+        const timeframe = 'W';
+        /*
         this.chartData.getCandles(
-            pair, this.timeframe,
+            pair, timeframe,
             data => console.log('chartData.getCandles',data)
         );
         this.chartData.getAccount(
@@ -74,10 +76,17 @@ class PageChart extends Page {
             pair,
             data => console.log('chartData.getTradeData',data)
         );
+        */
+        this.chartData.getChartData(
+            pair, timeframe,
+            data => console.log(
+                'chartData.getChartData',pair,timeframe,data
+            )
+        );
     }
 
     init = () => {
-
+        
         this.testChartData();
 
         this.requestChartData();

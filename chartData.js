@@ -3,9 +3,11 @@ class ChartData {
         this.source = source;
         this.pair = null;
         this.span = null; // H1 D W etc.
-        this.chartData = null;
+        this.candles = null;
         this.accountData = null;
         this.tradeData = null;
+        this.chartData = null;
+        this.instruments = null;
     }
 
     getAccount(callback){
@@ -24,22 +26,71 @@ class ChartData {
         if(
             pair === this.pair
             && span === this.span
-            && this.chartData
+            && this.candles
         ){
-            callback(this.chartData);
+            callback(this.candles);
         }
         this.pair = pair;
         this.span = span;
         this.source.getChartInfo(
             this.pair, this.span,
             data => {
-                this.chartData = data.candles;
+                this.candles = data.candles;
                 callback(data.candles);
             }
         );
     }
 
+    getInstruments(callback){
+        if(this.instruments){
+            return callback(this.instruments);
+        }
+        this.source.getInstrumentList(
+            data => {
+                this.instruments = data.instruments;
+                console.log('instruments',this.instruments);
+                callback(this.instruments);
+            }
+        );
+    }
+
     getChartData(pair, span, callback){
+        this.chartData = {
+            candles:null, account:null,
+            trade:null, instruments:null,
+        };
+        this.getCandles(
+            pair, span,
+            data => {
+                this.chartData.candles = data;
+                this.returnChartData(callback);
+            }
+        );
+        this.getTradeData(
+            pair,
+            data => {
+                this.chartData.account = this.accountData;
+                this.chartData.trade = this.tradeData;
+                this.returnChartData(callback);
+            }
+        );
+        this.getInstruments(
+            data => {
+                this.chartData.instruments = this.instruments;
+                this.returnChartData(callback);
+            }
+        );
+    }
+
+    returnChartData(callback){
+        if(
+            this.chartData.candles
+            && this.chartData.account
+            && this.chartData.trade
+            && this.chartData.instruments
+        ){
+            callback(this.chartData);
+        }
     }
 
     getTrades(callback){
