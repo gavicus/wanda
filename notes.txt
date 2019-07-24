@@ -11,6 +11,7 @@ todo
         click selection for stop loss and profit target
 
 done
+    instrument menu bug -- event was bound multiple times
     make instrument list part of ChartData service
     click entry on trades page to go to that pair on chart
     indicators should compute data points only once

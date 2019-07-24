@@ -2,8 +2,8 @@ class PageChart extends Page {
     constructor(oanda, pageIndicators){
         super('chart');
 
-        this.oanda = oanda;
-        this.chartData = new ChartData(oanda);
+        this.chartSource = new ChartSource(oanda);
+        this.chartData = null;
 
         this.pageIndicators = pageIndicators;
         this.context = this.root.getContext('2d');
@@ -40,11 +40,12 @@ class PageChart extends Page {
             dateZone: '#efefef',
         };
         
+        this.instrumentListInitialized = false;
         this.init();
     }
 
     autoCenterChart(){
-        var candles = this.data.candles;
+        var candles = this.chartData.candles;
         var high = 0;
         var low = 0;
         for(var candle of candles){
@@ -56,42 +57,44 @@ class PageChart extends Page {
         this.high = high;
         this.low = low;
         
-        // this.focus.y, this.vZoom
         this.focus.y = this.high;
         this.vZoom = this.high - this.low;
     }
 
-    testChartData(){
+    testChartSource(){
         const pair = 'GBP_CAD';
         const timeframe = 'W';
-        /*
-        this.chartData.getCandles(
+        this.chartSource.getCandles(
             pair, timeframe,
-            data => console.log('chartData.getCandles',data)
+            data => console.log('chartSource.getCandles',data)
         );
-        this.chartData.getAccount(
-            data=>console.log('chartData.getAccount',data)
+        this.chartSource.getAccount(
+            data=>console.log('chartSource.getAccount',data)
         );
-        this.chartData.getTradeData(
+        this.chartSource.getTradeData(
             pair,
-            data => console.log('chartData.getTradeData',data)
+            data => console.log('chartSource.getTradeData',data)
         );
-        */
-        this.chartData.getChartData(
+        this.chartSource.getChartData(
             pair, timeframe,
             data => console.log(
-                'chartData.getChartData',pair,timeframe,data
+                'chartSource.getChartData',pair,timeframe,data
             )
+        );
+    }
+
+    updateChartData(){
+        this.chartSource.getChartData(
+            this.instrument, this.timeframe, this.initChartData
         );
     }
 
     init = () => {
         
-        this.testChartData();
+        // this.testChartSource();
 
-        this.requestChartData();
-        this.requestAccountData();
-        this.oanda.getInstrumentList(this.initInstrumentList);
+        this.updateChartData();
+
         var menu = $('#timeframe-menu');
         var timeframes = ['M','W','D','H1'];
         for(var tf of timeframes){
@@ -103,36 +106,26 @@ class PageChart extends Page {
         menu.on('change',this.onTimeframeChange);
     };
 
-    initAccountData = data => {
-        this.accountData = data;
-        if(this.accountData){
-            this.requestTradeData();
-            this.initChartData(this.data);
-        }
-    };
-
     initChartData = data => {
-        this.data = data;
-        if(this.data){
+        this.chartData = data;
+        if(this.chartData){
             this.dataUpdated = new Date();
+            this.initInstrumentList();
             this.computeIndicators();
             this.autoCenterChart();
             this.show();
         }
     };
 
-    initInstrumentList = data => {
-        if(data){
-            this.instrumentData = data;
-        }
+    initInstrumentList = () => {
+        if(this.instrumentListInitialized){ return; }
+        this.instrumentListInitialized = true;
         var pairList = [];
         var stored = this.storage.get('o-instruments');
         if(stored){
             pairList = stored.split(',');
         }else{
-            if(data){
-                pairList = data.instruments.map(i=>i.name);
-            }
+            pairList = this.chartData.instruments.map(i=>i.name);
         }
         var menu = $('#instrument-menu');
         this.clearElement(menu[0]);
@@ -147,11 +140,6 @@ class PageChart extends Page {
 
         menu.val(pairList[0]);
         this.instrument = pairList[0];
-        this.requestChartData();
-    };
-
-    initTradeData = data => {
-        console.log('trade data',data);
     };
 
     onInstrumentChange = event => {
@@ -160,7 +148,7 @@ class PageChart extends Page {
 
     onTimeframeChange = event => {
         this.timeframe = event.target.value;
-        this.requestChartData();
+        this.updateChartData();
     };
 
     onKeyDown = event => {
@@ -281,9 +269,6 @@ class PageChart extends Page {
         return this.root.height * percentDown;
     }
 
-    resetInstrumentList(){
-    }
-
     screenToPrice(yValue){
         var atTop = this.getPriceAtScreenTop();
         var range = this.getScreenPriceRange();
@@ -297,12 +282,6 @@ class PageChart extends Page {
         var h = this.root.height;
         return (range*(yValue+h) + h*this.low) / h;
     }
-
-    requestAccountData = () => {
-        if(this.oanda){
-            this.oanda.getAccountInfo(this.initAccountData);
-        }
-    };
     
     getAccountTradeInfo(){
         if(this.accountData.trades){
@@ -320,34 +299,8 @@ class PageChart extends Page {
         return null;
     }
 
-    requestTradeData = () => {
-        if(this.oanda){
-            const accountInfo = this.getAccountTradeInfo();
-            if(accountInfo){
-                this.oanda.getTradeInfo(
-                    accountInfo.trade.id, this.initTradeData
-                );
-            }
-        }
-    };
-
-    requestChartData = () => {
-        if(this.oanda){
-            this.oanda.getChartInfo(
-                this.instrument, this.timeframe, this.initChartData
-            );
-            if(this.refreshTimer){
-                clearTimeout(this.refreshTimer);
-            }
-            var seconds = 60;
-            this.refreshTimer = setTimeout(
-                this.requestChartData, seconds * 1000
-            );
-        }
-    }
-
     computeIndicators(){
-        var candles = this.data.candles;
+        var candles = this.chartData.candles;
         var indicators = this.pageIndicators.indicators;
         for(var indicator of indicators){
             indicator.values = [];
@@ -386,8 +339,9 @@ class PageChart extends Page {
     }
 
     setInstrument(name){
+        console.log('setInstrument',name);
         this.instrument = name;
-        this.requestChartData();
+        this.updateChartData();
     }
 
     setupEvents(){
@@ -405,22 +359,18 @@ class PageChart extends Page {
     }
 
     getX(i) {
-        var column = this.data.candles.length - i;
+        var column = this.chartData.candles.length - i;
         var x = this.root.width - this.hZoom * column;
         x -= this.focus.x;
         return x
     }
 
-    show = data => {
+    show = () => {
         var c = this.context;
         c.fillStyle = '#fafafa';
         c.fillRect(0,0,this.root.width,this.root.height);
 
-        if(data){ this.data = data; }
-        else{ data = this.data; }
-        if(!data){ return; }
-
-        var candles = data.candles;
+        var candles = this.chartData.candles;
         var columnWidth = this.hZoom;
         var candleWidth = columnWidth * 0.5;
         var colors = this.colors;
@@ -532,7 +482,7 @@ class PageChart extends Page {
             var fontSize = 40;
             c.font = `100 ${fontSize}px Verdana`;
             c.fillStyle = '#888';
-            var text = data.instrument.replace('_',' ');
+            var text = this.instrument.replace('_',' ');
             text = text.toLowerCase();
             c.fillText(text, 10, fontSize);
         }

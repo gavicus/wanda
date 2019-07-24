@@ -1,4 +1,4 @@
-class ChartData {
+class ChartSource {
     constructor(source){
         this.source = source;
         this.pair = null;
@@ -48,7 +48,6 @@ class ChartData {
         this.source.getInstrumentList(
             data => {
                 this.instruments = data.instruments;
-                console.log('instruments',this.instruments);
                 callback(this.instruments);
             }
         );
@@ -70,7 +69,7 @@ class ChartData {
             pair,
             data => {
                 this.chartData.account = this.accountData;
-                this.chartData.trade = this.tradeData;
+                this.chartData.trade = this.tradeData || "no open trade";
                 this.returnChartData(callback);
             }
         );
@@ -115,6 +114,8 @@ class ChartData {
                         callback(info.trade);
                     }
                 );
+            } else {
+                callback("no open trade");
             }
         });
     }
