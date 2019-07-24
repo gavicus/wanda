@@ -1,10 +1,14 @@
 class PageChart extends Page {
     constructor(oanda, pageIndicators){
         super('chart');
+
         this.oanda = oanda;
+        this.chartData = new ChartData(oanda);
+
         this.pageIndicators = pageIndicators;
         this.context = this.root.getContext('2d');
         this.data = null;
+        this.accountData = null;
         this.high = 0;
         this.low = 0;
         this.focus = {x:0, y:0};
@@ -57,8 +61,27 @@ class PageChart extends Page {
         this.vZoom = this.high - this.low;
     }
 
+    testChartData(){
+        const pair = 'GBP_CAD';
+        this.chartData.getCandles(
+            pair, this.timeframe,
+            data => console.log('chartData.getCandles',data)
+        );
+        this.chartData.getAccount(
+            data=>console.log('chartData.getAccount',data)
+        );
+        this.chartData.getTradeData(
+            pair,
+            data => console.log('chartData.getTradeData',data)
+        );
+    }
+
     init = () => {
+
+        this.testChartData();
+
         this.requestChartData();
+        this.requestAccountData();
         this.oanda.getInstrumentList(this.initInstrumentList);
         var menu = $('#timeframe-menu');
         var timeframes = ['M','W','D','H1'];
@@ -71,12 +94,22 @@ class PageChart extends Page {
         menu.on('change',this.onTimeframeChange);
     };
 
+    initAccountData = data => {
+        this.accountData = data;
+        if(this.accountData){
+            this.requestTradeData();
+            this.initChartData(this.data);
+        }
+    };
+
     initChartData = data => {
         this.data = data;
-        this.dataUpdated = new Date();
-        this.computeIndicators();
-        this.autoCenterChart();
-        this.show();
+        if(this.data){
+            this.dataUpdated = new Date();
+            this.computeIndicators();
+            this.autoCenterChart();
+            this.show();
+        }
     };
 
     initInstrumentList = data => {
@@ -106,6 +139,10 @@ class PageChart extends Page {
         menu.val(pairList[0]);
         this.instrument = pairList[0];
         this.requestChartData();
+    };
+
+    initTradeData = data => {
+        console.log('trade data',data);
     };
 
     onInstrumentChange = event => {
@@ -252,10 +289,43 @@ class PageChart extends Page {
         return (range*(yValue+h) + h*this.low) / h;
     }
 
+    requestAccountData = () => {
+        if(this.oanda){
+            this.oanda.getAccountInfo(this.initAccountData);
+        }
+    };
+    
+    getAccountTradeInfo(){
+        if(this.accountData.trades){
+            const trade = this.accountData.trades.find(
+                t => t.instrument === this.instrument
+            );
+            if(trade){
+                const orders = this.accountData.orders.find(
+                    o => o.tradeId === trade.id
+                );
+                const info = {trade:trade[0], orders:orders};
+                return info;
+            }
+        }
+        return null;
+    }
+
+    requestTradeData = () => {
+        if(this.oanda){
+            const accountInfo = this.getAccountTradeInfo();
+            if(accountInfo){
+                this.oanda.getTradeInfo(
+                    accountInfo.trade.id, this.initTradeData
+                );
+            }
+        }
+    };
+
     requestChartData = () => {
         if(this.oanda){
             this.oanda.getChartInfo(
-                this.instrument, this.initChartData, this.timeframe
+                this.instrument, this.timeframe, this.initChartData
             );
             if(this.refreshTimer){
                 clearTimeout(this.refreshTimer);
@@ -333,9 +403,6 @@ class PageChart extends Page {
     }
 
     show = data => {
-        
-        console.log('show',data);
-
         var c = this.context;
         c.fillStyle = '#fafafa';
         c.fillRect(0,0,this.root.width,this.root.height);
@@ -505,8 +572,11 @@ class PageChart extends Page {
         var width = size.width;
         var x = this.root.width - width;
         c.fillRect(x,pricey-fontSize+2,width,fontSize+1);
-
         c.fillStyle = '#fff';
         c.fillText(message, x, pricey);
+
+        // current trade
+        if(this.accountData){
+        }
     }
 }

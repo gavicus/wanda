@@ -49,7 +49,28 @@ class Oanda {
         request.send();
     }
 
-    getChartInfo(instrument,callback,granularity){
+    getTradeInfo(tradeId, callback){
+        var token = this.getToken();
+        if(!token){ return null; }
+        var request = new XMLHttpRequest();
+        var url = this.getUrl() + 'v3/accounts/' + this.accountId;
+        url += '/trades/' + tradeId;
+        request.open('GET', url, true);
+        request.setRequestHeader('Authorization','Bearer '+token);
+        request.onload = () => {
+            if(request.status >= 200 && request.status < 400){
+                if(request.response){
+                    var data = JSON.parse(request.response);
+                    callback(data);
+                } else { console.log('null response'); }
+            } else {
+                console.log('error:',request.status,request.statusText);
+            }
+        }
+        request.send();
+    }
+
+    getChartInfo(instrument, granularity, callback){
         var path = `v3/instruments/${instrument}/candles`;
         /*
             granularity options:

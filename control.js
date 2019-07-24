@@ -69,7 +69,6 @@ class Control {
     };
 
     tradesCallback = (message,data) => {
-        console.log('tradesCallback', message,data);
         this.pageChart.setInstrument(data);
         this.onBtnChart();
     };
