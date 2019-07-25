@@ -6,10 +6,11 @@ class Control {
         this.pageChart = new PageChart(this.oanda, this.pageIndicators);
         this.pageTrades = new PageTrades(this.tradesCallback);
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
-        this.pageDraw = new PageDraw(this.pairsCallback);
+        this.pageDraw = new PageDraw(this.drawCallback);
         this.setupEvents();
         this.pageChart.init();
-        $('.tab').hide();
+        this.showPage();
+        this.setToolData();
     }
 
     clearRoot(){
@@ -20,31 +21,44 @@ class Control {
 
     onBtnAccount = event => {
         this.getAccountData();
-        $('.tab').hide();
-        $('#root').show();
+        this.showPage('root');
     };
 
     onBtnChart = event => {
-        this.pageChart.autoCenterChart();
+        if(event !== true){
+            this.pageChart.autoCenterChart();
+        }
         this.pageChart.show();
-        $('.tab').hide();
-        $('#chart-wrapper').show();
+        this.showPage('chart-wrapper');
     };
 
     onBtnDraw = event => {
-        $('.tab').hide();
-        $('#page-draw').show();
+        this.showPage('page-draw');
+    };
+
+    onBtnDrawTool = event => {
+        console.log('onBtnDrawTool',this.onBtnDrawTool);
+        this.pageChart.startDrawMode(this.drawingTool);
     };
 
     onBtnIndicators = event => {
-        $('.tab').hide();
-        $('#page-indicators').show();
+        this.showPage('page-indicators');
     };
 
     onBtnPairs = event => {
-        $('.tab').hide();
-        $('#page-pairs').show();
+        this.showPage('page-pairs');
     };
+
+    showPage(pageId){
+        $('.tab').hide();
+        $('#' + pageId).show();
+        let btn = $('#btn-draw-tool');
+        btn.hide();
+        if(pageId === 'chart-wrapper'){
+            btn.show();
+            this.setToolData();
+        }
+    }
 
     onBtnSet = event => {
         const input = document.getElementById('token-input');
@@ -56,13 +70,26 @@ class Control {
 
     onBtnTrades = event => {
         this.oanda.getAccountInfo(this.pageTrades.show);
-        $('.tab').hide();
-        $('#root').show();
+        this.showPage('root');
     }
 
     getAccountData(){
         this.oanda.getAccountInfo(this.showAccountData);
     }
+
+    setToolData(){
+        this.drawingTool = this.pageDraw.getToolData();
+        let toolName = this.drawingTool.tool;
+        $('#btn-draw-tool').html(toolName);
+    }
+
+    drawCallback = (message, data) => {
+        console.log('drawCallback',message,data);
+        if(message === 'select'){
+            this.drawingTool = data;
+            this.onBtnChart(true);
+        }
+    };
 
     indicatorsCallback = (message) => {
         console.log('indicatorsCallback',message);
@@ -104,6 +131,9 @@ class Control {
         );
         document.getElementById('btn-draw').addEventListener(
             'click', this.onBtnDraw
+        );
+        document.getElementById('btn-draw-tool').addEventListener(
+            'click', this.onBtnDrawTool
         );
     }
 

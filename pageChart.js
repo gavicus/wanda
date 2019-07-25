@@ -21,6 +21,8 @@ class PageChart extends Page {
         this.storage = new Storage();
         this.refreshTimer = null;
         this.dataUpdated = null;
+        this.drawingTool = null;
+        this.drawingMode = false;
 
         this.rezRatio = 3;
         this.styleWidth = 400;
@@ -173,6 +175,11 @@ class PageChart extends Page {
     onMouseMove = event => {
         var current = {x:event.offsetX, y:event.offsetY};
         this.hoveredPrice = this.screenToPrice(current.y);
+        if(this.drawingMode){
+            this.mouseDown = false;
+            this.mouseDragged = false;
+            return;
+        }
         if(this.mouseDown){
             this.mouseDragged = true;
             
@@ -224,6 +231,15 @@ class PageChart extends Page {
     onMouseUp = event => {
         this.mouseDown = false;
         this.mouseDragged = false;
+        if(this.drawingMode){
+            console.log('this.drawingTool',this.drawingTool);
+            if(this.drawingTool.tool === 'horiz'){
+                this.drawingMode = false;
+            }
+            if(this.drawingTool.tool === 'trend'){
+                this.drawingMode = false;
+            }
+        }
     };
 
     onMouseWheel = event => {
@@ -416,13 +432,15 @@ class PageChart extends Page {
         }
         
         // price line
-        var pricey = this.priceToScreen(this.hoveredPrice);
-        c.strokeStyle = this.colors.priceLine;
-        c.setLineDash([10,10]);
-        c.moveTo(0,pricey);
-        c.lineTo(this.root.width, pricey);
-        c.stroke();
-        c.setLineDash([]);
+        if(!this.drawingMode){
+            const pricey = this.priceToScreen(this.hoveredPrice);
+            c.strokeStyle = this.colors.priceLine;
+            c.setLineDash([10,10]);
+            c.moveTo(0,pricey);
+            c.lineTo(this.root.width, pricey);
+            c.stroke();
+            c.setLineDash([]);
+        }
 
         // candles
         for(var i=candles.length-1; i>=0; --i){
@@ -566,6 +584,12 @@ class PageChart extends Page {
         c.fillStyle = 'white';
         c.textBaseline = "hanging";
         c.fillText(text, this.root.width-width, y-fontSize/2);
+    }
+
+    startDrawMode(drawingTool){
+        console.log('startDrawMode',drawingTool);
+        this.drawingTool = drawingTool;
+        this.drawingMode = true;
     }
 
 }

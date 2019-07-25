@@ -1,13 +1,15 @@
 todo
-    drawing tools
-        [draw] button leads to separate page
-        [<tool-name>] to right of [draw]
-        trend lines
-        horizontals
+    draw trend lines
+    draw horizontals
+    move set token form to a separate page reached by a nav button
     create trade interface
         click selection for stop loss and profit target
 
 done
+    drawing tools page
+        [draw] button leads to separate page
+        [<tool-name>] to right of [draw]
+        persist tool settings and last tool used
     showPriceLine function
     show current trade on chart
         entry level
