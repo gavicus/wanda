@@ -339,7 +339,6 @@ class PageChart extends Page {
     }
 
     setInstrument(name){
-        console.log('setInstrument',name);
         this.instrument = name;
         this.updateChartData();
     }
@@ -484,6 +483,7 @@ class PageChart extends Page {
             c.fillStyle = '#888';
             var text = this.instrument.replace('_',' ');
             text = text.toLowerCase();
+            c.textBaseline = "alphabetic";
             c.fillText(text, 10, fontSize);
         }
 
@@ -513,29 +513,61 @@ class PageChart extends Page {
         // current price
         var lastCandle = candles[candles.length-1];
         var currentPrice = lastCandle.mid.c;
-        var pricey = this.priceToScreen(currentPrice);
-        c.strokeStyle = this.colors.currentPrice;
-        c.setLineDash([10,10]);
-        c.moveTo(0,pricey);
-        c.lineTo(this.root.width, pricey);
-        c.stroke();
-        c.setLineDash([]);
-
-        var fontSize = 32;
-        pricey += fontSize * 1/3;
-        c.font = `100 ${fontSize}px Verdana`;
-        var message = '' + currentPrice;
-
-        c.fillStyle = '#777';
-        var size = c.measureText(message);
-        var width = size.width;
-        var x = this.root.width - width;
-        c.fillRect(x,pricey-fontSize+2,width,fontSize+1);
-        c.fillStyle = '#fff';
-        c.fillText(message, x, pricey);
+        this.showPriceLine(c, currentPrice, {text:currentPrice});
 
         // current trade
-        if(this.accountData){
+        this.showCurrentTrade(c);
+
+    }
+
+    showCurrentTrade(c){
+        if(!this.chartData.trade.id){ return; }
+        const trade = this.chartData.trade;
+        const profit = parseFloat(trade.unrealizedPL);
+        const entryPrice = trade.price;
+        const red = '#b00';
+        const green = '#090';
+        const entryColor = profit > 0 ? green : red;
+        this.showPriceLine(
+            c, entryPrice,
+            {text: profit.toFixed(2), color: entryColor},
+        );
+        if(trade.stopLossOrder){
+            this.showPriceLine(
+                c, trade.stopLossOrder.price,
+                {text: 'stop', color: red, dash: [20,20]},
+            );
+
         }
     }
+
+    showPriceLine(c,price,options){
+        console.log('showPriceLine',price,options);
+        const dash = options.dash || [];
+        const color = options.color || '#888';
+        const text = options.text || null;
+        const fontSize = options.fontSize || 30;
+        const y = this.priceToScreen(price);
+        c.setLineDash(dash);
+        c.strokeStyle = color;
+        c.beginPath();
+        c.moveTo(0,y);
+        console.log(this.root.width,y);
+        c.lineTo(this.root.width,y);
+        c.stroke();
+
+        if(!text){return;}
+        c.font = `700 ${fontSize}px Verdana`;
+        const width = c.measureText(text).width;
+        c.fillStyle = color;
+        c.fillRect(
+            this.root.width-width, y-fontSize/2,
+            width, fontSize
+        );
+
+        c.fillStyle = 'white';
+        c.textBaseline = "hanging";
+        c.fillText(text, this.root.width-width, y-fontSize/2);
+    }
+
 }

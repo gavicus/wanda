@@ -1,9 +1,4 @@
 todo
-    make pageChart use ChartData only and remove oanda import
-    show current trade on chart
-        entry level
-        stop loss level
-        current value
     drawing tools
         trend lines
         horizontals
@@ -11,6 +6,12 @@ todo
         click selection for stop loss and profit target
 
 done
+    showPriceLine function
+    show current trade on chart
+        entry level
+        stop loss level
+        current value
+    make pageChart use ChartData only and remove oanda import
     instrument menu bug -- event was bound multiple times
     make instrument list part of ChartData service
     click entry on trades page to go to that pair on chart

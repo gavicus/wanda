@@ -13,7 +13,6 @@ class PageTrades extends Page {
     show = data => {
         const account = data.account;
         const trades = account.trades;
-        console.log('trades',trades);
         this.clearRoot();
         const table = document.createElement('table');
         var fields = ['id','instrument','units','opened','price'];
