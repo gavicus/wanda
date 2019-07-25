@@ -6,6 +6,7 @@ class Control {
         this.pageChart = new PageChart(this.oanda, this.pageIndicators);
         this.pageTrades = new PageTrades(this.tradesCallback);
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
+        this.pageDraw = new PageDraw(this.pairsCallback);
         this.setupEvents();
         this.pageChart.init();
         $('.tab').hide();
@@ -28,6 +29,11 @@ class Control {
         this.pageChart.show();
         $('.tab').hide();
         $('#chart-wrapper').show();
+    };
+
+    onBtnDraw = event => {
+        $('.tab').hide();
+        $('#page-draw').show();
     };
 
     onBtnIndicators = event => {
@@ -95,6 +101,9 @@ class Control {
         );
         document.getElementById('btn-indicators').addEventListener(
             'click', this.onBtnIndicators
+        );
+        document.getElementById('btn-draw').addEventListener(
+            'click', this.onBtnDraw
         );
     }
 

@@ -542,7 +542,6 @@ class PageChart extends Page {
     }
 
     showPriceLine(c,price,options){
-        console.log('showPriceLine',price,options);
         const dash = options.dash || [];
         const color = options.color || '#888';
         const text = options.text || null;
@@ -552,7 +551,6 @@ class PageChart extends Page {
         c.strokeStyle = color;
         c.beginPath();
         c.moveTo(0,y);
-        console.log(this.root.width,y);
         c.lineTo(this.root.width,y);
         c.stroke();
 

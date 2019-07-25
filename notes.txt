@@ -1,5 +1,7 @@
 todo
     drawing tools
+        [draw] button leads to separate page
+        [<tool-name>] to right of [draw]
         trend lines
         horizontals
     create trade interface
