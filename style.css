@@ -61,8 +61,13 @@ ul {
     display: block;
 }
 
+.form-field div,
 .form-field input {
-    margin-left: 10px;
+    display: inline-block;
+}
+
+.form-field div.label {
+    width: 40px;
 }
 
 .form-field .color-box {

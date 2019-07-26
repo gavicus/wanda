@@ -145,27 +145,74 @@ class PageChart extends Page {
         this.initTradeForm();
     };
 
+    makeElement(tag,parentElem,options){
+        const elem = document.createElement(tag);
+        if(options.attr){
+            for(let key of Object.keys(options.attr)){
+                elem.setAttribute(key, options.attr[key]);
+            }
+        }
+        if(options.style){
+            for(let key of Object.keys(options.style)){
+                elem.style[key] = options.style[key];
+            }
+        }
+        if(options.text){
+            elem.textContent = options.text;
+        }
+        parentElem.append(elem);
+        return elem;
+    }
+
+    makeInputField(name,inputId,parentElem){
+        const field = this.makeElement('div',parentElem,{
+            attr:{class: 'form-field'},
+        });
+        const label = this.makeElement('div',field,{
+            text: name, attr: {class:'label'},
+        });
+        const input = this.makeElement('input',field,{
+            attr: {type:'text',id:inputId,class:'short-input'},
+            style: {display:'inline-block'},
+        });
+        return field;
+    }
+
     initTradeForm(){
         const tradeForm = document.createElement('div');
         tradeForm.setAttribute('id','trade-form');
 
-        const longShort = document.createElement('button');
-        longShort.textContent = 'long';
-        longShort.style.color = this.colors.darkGreen;
+        const longShort = this.makeElement('button',tradeForm,{
+            text:'long', style:{color:this.colors.darkGreen} });
         $(longShort).on('click',this.onBtnLongShort);
-        tradeForm.append(longShort);
 
-        const priceField = document.createElement('div');
-        priceField.setAttribute('class','form-field');
-        priceField.textContent = 'price';
-        const priceInput = document.createElement('input');
-        priceInput.setAttribute('id','price-input');
-        priceInput.setAttribute('class','short-input');
-        priceField.append(priceInput);
-        const priceButton = document.createElement('button');
-        priceButton.textContent = 'chart';
-        priceField.append(priceButton);
-        tradeForm.append(priceField);
+        const cur = this.makeElement('div',tradeForm,{
+            attr:{class:'form-field'} });
+        const curlab = this.makeElement('div',cur,{
+            text:'current',attr:{class:'label'} });
+        const curval = this.makeElement('div',cur,{
+            attr:{id:'current-value'} });
+
+        const unitsField = this.makeInputField(
+            'units','units-input',tradeForm
+        );
+
+        const riskField = this.makeInputField(
+            'risk','risk-input',tradeForm
+        );
+
+        let makePriceField = (name,parentElem) => {
+            const f = this.makeElement('div',parentElem,{
+                attr:{class:'form-field'} });
+            this.makeElement('div',f,{attr:{class:'label'}, text:name });
+            this.makeElement('input',f,{
+                attr:{id:name+'-input', class:'short-input'} });
+            this.makeElement('button',f,{ text:'chart' });
+            return f;
+        };
+
+        makePriceField('stop',tradeForm);
+        makePriceField('profit',tradeForm);
 
         const chartWrapper = $('#chart-wrapper');
         chartWrapper.append(tradeForm);
@@ -625,14 +672,19 @@ class PageChart extends Page {
         }
 
         // current price
-        var lastCandle = candles[candles.length-1];
-        var currentPrice = lastCandle.mid.c;
+        var currentPrice = this.getCurrentPrice();
         this.showPriceLine(currentPrice, {text:currentPrice});
 
         // current trade
         this.showCurrentTrade();
 
         this.showDrawings();
+    }
+
+    getCurrentPrice(){
+        const candles = this.chartData.candles;
+        const lastCandle = candles[candles.length-1];
+        return lastCandle.mid.c;
     }
 
     showDrawings(){
@@ -749,6 +801,8 @@ class PageChart extends Page {
             form.hide();
         } else {
             this.tradeFormOpen = true;
+            let currentPrice = this.getCurrentPrice();
+            $('#current-value').html(currentPrice);
             form.show();
         }
     }

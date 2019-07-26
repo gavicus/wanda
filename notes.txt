@@ -1,6 +1,8 @@
 todo
     create trade interface
         click selection for stop loss and profit target
+    drawing trend lines, show line to mouse after first click
+    allow removal of drawings
 
 done
     move set token form to a separate page reached by a nav button
