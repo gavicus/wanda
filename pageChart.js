@@ -41,9 +41,61 @@ class PageChart extends Page {
             currentPrice: '#68f',
             dateZone: '#efefef',
         };
+
+        this.drawings = [];
+        this.drawingsCookieName = 'o-drawings';
+        this.currentDrawing = null;
+        this.readDrawings();
         
         this.instrumentListInitialized = false;
         this.init();
+    }
+
+    addDrawing(){
+        this.drawings.push(this.currentDrawing);
+        this.writeDrawings();
+        this.show();
+    }
+
+    readDrawings(){
+        let cookie = this.storage.get(this.drawingsCookieName);
+        this.drawings = this.cookieToDrawings(cookie);
+        console.log('readDrawings',this.drawings);
+    }
+
+    cookieToDrawings(cookie){
+        let drawings = [];
+        const cookies = cookie.split('|');
+        for(let cookie of cookies){
+            let drawing = {};
+            let fields = cookie.split(',');
+            for(let field of fields){
+                let [key,value] = field.split(':');
+                drawing[key] = value;
+            }
+            drawings.push(drawing);
+        }
+        return drawings;
+    }
+
+    drawingsToCookie(){
+        let cookies = [];
+        for(let drawing of this.drawings){
+            let cookie = 'type:'+drawing.type;
+            cookie += ',pair:'+this.instrument;
+            if(drawing.type === 'horiz'){
+                cookie += ',price:'+drawing.price;
+                cookie += ',color:'+drawing.color;
+            }
+            cookies.push(cookie);
+        }
+        return cookies.join('|');
+    }
+
+    writeDrawings(){
+        const cookie = this.drawingsToCookie();
+        this.storage.set(this.drawingsCookieName, cookie);
+        console.log('writeDrawings',cookie);
     }
 
     autoCenterChart(){
@@ -63,28 +115,6 @@ class PageChart extends Page {
         this.vZoom = this.high - this.low;
     }
 
-    testChartSource(){
-        const pair = 'GBP_CAD';
-        const timeframe = 'W';
-        this.chartSource.getCandles(
-            pair, timeframe,
-            data => console.log('chartSource.getCandles',data)
-        );
-        this.chartSource.getAccount(
-            data=>console.log('chartSource.getAccount',data)
-        );
-        this.chartSource.getTradeData(
-            pair,
-            data => console.log('chartSource.getTradeData',data)
-        );
-        this.chartSource.getChartData(
-            pair, timeframe,
-            data => console.log(
-                'chartSource.getChartData',pair,timeframe,data
-            )
-        );
-    }
-
     updateChartData(){
         this.chartSource.getChartData(
             this.instrument, this.timeframe, this.initChartData
@@ -92,11 +122,7 @@ class PageChart extends Page {
     }
 
     init = () => {
-        
-        // this.testChartSource();
-
         this.updateChartData();
-
         var menu = $('#timeframe-menu');
         var timeframes = ['M','W','D','H1'];
         for(var tf of timeframes){
@@ -228,17 +254,29 @@ class PageChart extends Page {
         $('#chart-message').html(message);
     }
 
+    createDrawing(where){
+        if(this.drawingTool.tool === 'horiz'){
+            const price = this.screenToPrice(where.y);
+            this.currentDrawing = {
+                pair: this.instrument,
+                type: this.drawingTool.tool,
+                color: '#'+this.drawingTool.color,
+                price: price,
+            };
+            this.addDrawing();
+            this.drawingMode = false;
+        }
+        if(this.drawingTool.tool === 'trend'){
+            this.drawingMode = false;
+        }
+    }
+
     onMouseUp = event => {
         this.mouseDown = false;
         this.mouseDragged = false;
+        const where = {x:event.offsetX, y:event.offsetY};
         if(this.drawingMode){
-            console.log('this.drawingTool',this.drawingTool);
-            if(this.drawingTool.tool === 'horiz'){
-                this.drawingMode = false;
-            }
-            if(this.drawingTool.tool === 'trend'){
-                this.drawingMode = false;
-            }
+            this.createDrawing();
         }
     };
 
@@ -534,11 +572,33 @@ class PageChart extends Page {
         this.showPriceLine(c, currentPrice, {text:currentPrice});
 
         // current trade
-        this.showCurrentTrade(c);
+        this.showCurrentTrade();
 
+        this.showDrawings();
     }
 
-    showCurrentTrade(c){
+    showDrawings(){
+        const c = this.context;
+        const drawings = this.drawings.filter(
+            d => d.pair === this.instrument
+        );
+        for(let drawing of drawings){
+            console.log('showDrawings',drawing);
+            if(drawing.type === 'horiz'){
+                c.strokeStyle = drawing.color;
+                const y = this.priceToScreen(drawing.price);
+                c.beginPath();
+                c.moveTo(0, y);
+                c.lineTo(this.root.width, y);
+                c.stroke();
+            }
+            if(drawing.type === 'trend'){
+            }
+        }
+    }
+
+    showCurrentTrade(){
+        const c = this.context;
         if(!this.chartData.trade.id){ return; }
         const trade = this.chartData.trade;
         const profit = parseFloat(trade.unrealizedPL);
@@ -587,7 +647,6 @@ class PageChart extends Page {
     }
 
     startDrawMode(drawingTool){
-        console.log('startDrawMode',drawingTool);
         this.drawingTool = drawingTool;
         this.drawingMode = true;
     }
