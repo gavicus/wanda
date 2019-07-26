@@ -53,6 +53,7 @@ class PageChart extends Page {
 
     addDrawing(){
         this.drawings.push(this.currentDrawing);
+        this.currentDrawing = null;
         this.writeDrawings();
         this.show();
     }
@@ -71,7 +72,7 @@ class PageChart extends Page {
             let fields = cookie.split(',');
             for(let field of fields){
                 let [key,value] = field.split(':');
-                drawing[key] = value;
+                drawing[key] = value.replace(/&colon;/g, ':');
             }
             drawings.push(drawing);
         }
@@ -83,9 +84,17 @@ class PageChart extends Page {
         for(let drawing of this.drawings){
             let cookie = 'type:'+drawing.type;
             cookie += ',pair:'+this.instrument;
+            cookie += ',color:'+drawing.color;
             if(drawing.type === 'horiz'){
                 cookie += ',price:'+drawing.price;
-                cookie += ',color:'+drawing.color;
+            } else if(drawing.type === 'trend'){
+                cookie += ',timeframe:'+drawing.timeframe;
+                cookie += ',startPrice:'+drawing.startPrice;
+                cookie += ',startTime:'
+                    +drawing.startTime.replace(/:/g, '&colon;');
+                cookie += ',endPrice:'+drawing.endPrice;
+                cookie += ',endTime:'
+                    +drawing.endTime.replace(/:/g, '&colon;');
             }
             cookies.push(cookie);
         }
@@ -95,7 +104,6 @@ class PageChart extends Page {
     writeDrawings(){
         const cookie = this.drawingsToCookie();
         this.storage.set(this.drawingsCookieName, cookie);
-        console.log('writeDrawings',cookie);
     }
 
     autoCenterChart(){
@@ -267,7 +275,25 @@ class PageChart extends Page {
             this.drawingMode = false;
         }
         if(this.drawingTool.tool === 'trend'){
-            this.drawingMode = false;
+            const price = this.screenToPrice(where.y);
+            const candle = this.screenToCandle(where.x);
+            const time = candle.time;
+            console.log('candle',candle);
+            if(this.currentDrawing){
+                this.currentDrawing['endPrice'] = price;
+                this.currentDrawing['endTime'] = time;
+                this.addDrawing();
+                this.drawingMode = false;
+            } else {
+                this.currentDrawing = {
+                    pair: this.instrument,
+                    type: this.drawingTool.tool,
+                    timeframe: this.timeframe,
+                    color: '#'+this.drawingTool.color,
+                    startPrice: price,
+                    startTime: time,
+                };
+            }
         }
     }
 
@@ -276,7 +302,7 @@ class PageChart extends Page {
         this.mouseDragged = false;
         const where = {x:event.offsetX, y:event.offsetY};
         if(this.drawingMode){
-            this.createDrawing();
+            this.createDrawing(where);
         }
     };
 
@@ -383,13 +409,13 @@ class PageChart extends Page {
     }
 
     screenToCandle(xValue){
-        if(!this.data){ return null; }
+        if(!this.chartData){ return null; }
         var fromRight = this.root.width - xValue * this.rezRatio;
         fromRight -= this.focus.x;
         fromRight += this.hZoom / 2;
         var columnFromRight = Math.floor(fromRight / this.hZoom);
-        var index = this.data.candles.length - columnFromRight;
-        return this.data.candles[index];
+        var index = this.chartData.candles.length - columnFromRight;
+        return this.chartData.candles[index];
     }
 
     setInstrument(name){
@@ -409,6 +435,11 @@ class PageChart extends Page {
         $(document).ready(()=>{
             $('#timeframe-menu').val(this.timeframe);
         });
+    }
+    
+    candleToScreen(candle){
+        let index = this.chartData.candles.indexOf(candle);
+        return this.getX(index);
     }
 
     getX(i) {
@@ -469,15 +500,12 @@ class PageChart extends Page {
             }
         }
         
-        // price line
+        // hover line
         if(!this.drawingMode){
-            const pricey = this.priceToScreen(this.hoveredPrice);
-            c.strokeStyle = this.colors.priceLine;
-            c.setLineDash([10,10]);
-            c.moveTo(0,pricey);
-            c.lineTo(this.root.width, pricey);
-            c.stroke();
-            c.setLineDash([]);
+            this.showPriceLine(
+                this.hoveredPrice,
+                {dash:[15,15], color:'#88f'},
+            );
         }
 
         // candles
@@ -549,6 +577,7 @@ class PageChart extends Page {
             if(!indicator.getShown()){ continue; }
             var name = indicator.getName();
             if(name === 'ma'){
+                c.setLineDash([]);
                 c.beginPath();
                 c.lineWidth = 3;
                 var first = true;
@@ -569,7 +598,7 @@ class PageChart extends Page {
         // current price
         var lastCandle = candles[candles.length-1];
         var currentPrice = lastCandle.mid.c;
-        this.showPriceLine(c, currentPrice, {text:currentPrice});
+        this.showPriceLine(currentPrice, {text:currentPrice});
 
         // current trade
         this.showCurrentTrade();
@@ -583,18 +612,38 @@ class PageChart extends Page {
             d => d.pair === this.instrument
         );
         for(let drawing of drawings){
-            console.log('showDrawings',drawing);
-            if(drawing.type === 'horiz'){
-                c.strokeStyle = drawing.color;
-                const y = this.priceToScreen(drawing.price);
-                c.beginPath();
-                c.moveTo(0, y);
-                c.lineTo(this.root.width, y);
-                c.stroke();
-            }
-            if(drawing.type === 'trend'){
+            switch(drawing.type){
+                case 'horiz':
+                    this.showPriceLine(
+                        drawing.price, {color:drawing.color}
+                    );
+                    break;
+                case 'trend':
+                    this.showTrendLine(drawing);
+                    break;
             }
         }
+    }
+
+    getCandleByTime(time){
+        let candle = this.chartData.candles.find(c=>c.time===time);
+        return candle;
+    }
+
+    showTrendLine(drawing){
+        if(this.timeframe !== drawing.timeframe){ return; }
+        const fromCandle = this.getCandleByTime(drawing.startTime);
+        const fromx = this.candleToScreen(fromCandle);
+        const fromy = this.priceToScreen(drawing.startPrice);
+        const toCandle = this.getCandleByTime(drawing.endTime);
+        const tox = this.candleToScreen(toCandle);
+        const toy = this.priceToScreen(drawing.endPrice);
+        const c = this.context;
+        c.strokeStyle = drawing.color;
+        c.beginPath();
+        c.moveTo(fromx, fromy);
+        c.lineTo(tox, toy);
+        c.stroke();
     }
 
     showCurrentTrade(){
@@ -607,19 +656,20 @@ class PageChart extends Page {
         const green = '#090';
         const entryColor = profit > 0 ? green : red;
         this.showPriceLine(
-            c, entryPrice,
+            entryPrice,
             {text: profit.toFixed(2), color: entryColor},
         );
         if(trade.stopLossOrder){
             this.showPriceLine(
-                c, trade.stopLossOrder.price,
+                trade.stopLossOrder.price,
                 {text: 'stop', color: red, dash: [20,20]},
             );
 
         }
     }
 
-    showPriceLine(c,price,options){
+    showPriceLine(price,options){
+        const c = this.context;
         const dash = options.dash || [];
         const color = options.color || '#888';
         const text = options.text || null;

@@ -1,11 +1,11 @@
 todo
-    draw horizontals
-    draw trend lines
     move set token form to a separate page reached by a nav button
     create trade interface
         click selection for stop loss and profit target
 
 done
+    draw horizontals
+    draw trend lines
     drawing tools page
         [draw] button leads to separate page
         [<tool-name>] to right of [draw]
