@@ -65,10 +65,14 @@ class Control {
         }
     }
 
+    onBtnTrade = () => {
+        this.pageChart.toggleTradeForm();
+    };
+
     onBtnTrades = event => {
         this.oanda.getAccountInfo(this.pageTrades.show);
         this.showPage('root');
-    }
+    };
 
     getAccountData(){
         this.oanda.getAccountInfo(this.showAccountData);
@@ -125,6 +129,9 @@ class Control {
         );
         document.getElementById('btn-trades').addEventListener(
             'click', this.onBtnTrades
+        );
+        document.getElementById('btn-trade').addEventListener(
+            'click', this.onBtnTrade
         );
         document.getElementById('btn-pairs').addEventListener(
             'click', this.onBtnPairs

@@ -40,6 +40,8 @@ class PageChart extends Page {
             priceLine: '#777',
             currentPrice: '#68f',
             dateZone: '#efefef',
+            darkGreen: '#090',
+            darkRed: '#b00',
         };
 
         this.drawings = [];
@@ -139,7 +141,36 @@ class PageChart extends Page {
             menu.append(option);
         }
         menu.on('change',this.onTimeframeChange);
+
+        this.initTradeForm();
     };
+
+    initTradeForm(){
+        const tradeForm = document.createElement('div');
+        tradeForm.setAttribute('id','trade-form');
+
+        const longShort = document.createElement('button');
+        longShort.textContent = 'long';
+        longShort.style.color = this.colors.darkGreen;
+        $(longShort).on('click',this.onBtnLongShort);
+        tradeForm.append(longShort);
+
+        const priceField = document.createElement('div');
+        priceField.setAttribute('class','form-field');
+        priceField.textContent = 'price';
+        const priceInput = document.createElement('input');
+        priceInput.setAttribute('id','price-input');
+        priceInput.setAttribute('class','short-input');
+        priceField.append(priceInput);
+        const priceButton = document.createElement('button');
+        priceButton.textContent = 'chart';
+        priceField.append(priceButton);
+        tradeForm.append(priceField);
+
+        const chartWrapper = $('#chart-wrapper');
+        chartWrapper.append(tradeForm);
+        $(tradeForm).hide();
+    }
 
     initChartData = data => {
         this.chartData = data;
@@ -628,6 +659,18 @@ class PageChart extends Page {
         return candle;
     }
 
+    onBtnLongShort = event => {
+        const btn = event.target;
+        console.log('button html',btn.innerHTML);
+        if(btn.innerHTML === 'long'){
+            btn.innerHTML = 'short';
+            btn.style.color = this.colors.darkRed;
+        } else {
+            btn.innerHTML = 'long';
+            btn.style.color = this.colors.darkGreen;
+        }
+    };
+
     showTrendLine(drawing){
         if(this.timeframe !== drawing.timeframe){ return; }
         const fromCandle = this.getCandleByTime(drawing.startTime);
@@ -650,9 +693,9 @@ class PageChart extends Page {
         const trade = this.chartData.trade;
         const profit = parseFloat(trade.unrealizedPL);
         const entryPrice = trade.price;
-        const red = '#b00';
-        const green = '#090';
-        const entryColor = profit > 0 ? green : red;
+        const entryColor = profit > 0
+            ? this.colors.darkGreen
+            : this.colors.darkRed;
         this.showPriceLine(
             entryPrice,
             {text: profit.toFixed(2), color: entryColor},
@@ -697,6 +740,17 @@ class PageChart extends Page {
     startDrawMode(drawingTool){
         this.drawingTool = drawingTool;
         this.drawingMode = true;
+    }
+
+    toggleTradeForm(){
+        let form = $('#trade-form');
+        if(this.tradeFormOpen){
+            this.tradeFormOpen = false;
+            form.hide();
+        } else {
+            this.tradeFormOpen = true;
+            form.show();
+        }
     }
 
 }

@@ -58,6 +58,7 @@ ul {
 
 .form-field {
     margin-top: 5px;
+    display: block;
 }
 
 .form-field input {
@@ -75,5 +76,21 @@ ul {
 .trade-entry:hover {
     cursor: pointer;
     color: blue;
+}
+
+#trade-form {
+    border: 1px solid gray;
+    background-color: white;
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    top: 100px;
+    left: 30px;
+    z-index: 5;
+    padding: 10px;
+}
+
+.short-input {
+    width: 60px;
 }
 
