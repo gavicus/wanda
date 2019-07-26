@@ -61,7 +61,6 @@ class PageChart extends Page {
     readDrawings(){
         let cookie = this.storage.get(this.drawingsCookieName);
         this.drawings = this.cookieToDrawings(cookie);
-        console.log('readDrawings',this.drawings);
     }
 
     cookieToDrawings(cookie){
@@ -278,7 +277,6 @@ class PageChart extends Page {
             const price = this.screenToPrice(where.y);
             const candle = this.screenToCandle(where.x);
             const time = candle.time;
-            console.log('candle',candle);
             if(this.currentDrawing){
                 this.currentDrawing['endPrice'] = price;
                 this.currentDrawing['endTime'] = time;

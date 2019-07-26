@@ -7,6 +7,7 @@ class Control {
         this.pageTrades = new PageTrades(this.tradesCallback);
         this.pagePairs = new PagePairs(this.oanda, this.pairsCallback);
         this.pageDraw = new PageDraw(this.drawCallback);
+        this.pageToken = new PageToken(this.oanda, this.tokenCallback);
         this.setupEvents();
         this.pageChart.init();
         this.showPage();
@@ -49,6 +50,10 @@ class Control {
         this.showPage('page-pairs');
     };
 
+    onBtnToken = event => {
+        this.showPage('page-token');
+    };
+
     showPage(pageId){
         $('.tab').hide();
         $('#' + pageId).show();
@@ -58,14 +63,6 @@ class Control {
             btn.show();
             this.setToolData();
         }
-    }
-
-    onBtnSet = event => {
-        const input = document.getElementById('token-input');
-        this.setToken(input.value);
-        input.value = '';
-        const field = document.getElementById('token-field');
-        field.innerHTML = 'set';
     }
 
     onBtnTrades = event => {
@@ -101,6 +98,12 @@ class Control {
         }
     };
 
+    tokenCallback = (message) => {
+        if(message === 'set'){
+            this.showPage('none');
+        }
+    };
+
     tradesCallback = (message,data) => {
         this.pageChart.setInstrument(data);
         this.onBtnChart();
@@ -111,11 +114,11 @@ class Control {
     }
 
     setupEvents(){
-        document.getElementById('btn-set').addEventListener(
-            'click', this.onBtnSet
-        );
         document.getElementById('btn-account').addEventListener(
             'click', this.onBtnAccount
+        );
+        document.getElementById('btn-token').addEventListener(
+            'click', this.onBtnToken
         );
         document.getElementById('btn-chart').addEventListener(
             'click', this.onBtnChart
