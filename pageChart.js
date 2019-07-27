@@ -762,7 +762,7 @@ class PageChart extends Page {
         if(trade.stopLossOrder){
             this.showPriceLine(
                 trade.stopLossOrder.price,
-                {text: 'stop', color: red, dash: [20,20]},
+                {text: 'stop', color: this.colors.darkRed, dash: [20,20]},
             );
 
         }
