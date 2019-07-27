@@ -66,6 +66,7 @@ class PageChart extends Page {
     }
 
     cookieToDrawings(cookie){
+        if(!cookie){ return null; }
         let drawings = [];
         const cookies = cookie.split('|');
         for(let cookie of cookies){
@@ -657,6 +658,9 @@ class PageChart extends Page {
                 c.beginPath();
                 c.lineWidth = 3;
                 var first = true;
+                if(!indicator.values){
+                    console.log('indicator has no values',indicator);
+                }
                 for(var i in indicator.values){
                     var avg = indicator.values[i];
                     var x = this.getX(i);
@@ -688,6 +692,7 @@ class PageChart extends Page {
     }
 
     showDrawings(){
+        if(!this.drawings){ return; }
         const c = this.context;
         const drawings = this.drawings.filter(
             d => d.pair === this.instrument

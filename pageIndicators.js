@@ -31,7 +31,7 @@ class PageIndicators extends Page {
         var typeMenu = $('#type-menu')[0];
         var name = typeMenu.value;
         var formArray = [`name:${name}`];
-        var inputs = $('.form-field input');
+        var inputs = $('.indicator-input');
         for(var input of inputs){
             if(!input.value){ return false; }
             formArray.push(input.name + ':' + input.value);
@@ -98,6 +98,7 @@ class PageIndicators extends Page {
             label.textContent = fieldName;
             var input = document.createElement('input');
             input.setAttribute('name',fieldName);
+            input.setAttribute('class','indicator-input');
             input.setAttribute('placeholder',fieldName);
             label.append(input);
             if(fieldType === 'color'){
@@ -131,6 +132,7 @@ class PageIndicators extends Page {
 
     onClickShown = event => {
         var indicator = this.indicators[this.selectedIndex];
+        if(!indicator){ return; }
         indicator.fields['shown'] = event.target.checked;
         this.writeToStored();
     };
@@ -162,6 +164,7 @@ class PageIndicators extends Page {
             }
             this.populateList();
             this.writeToStored();
+            this.callback('update');
         } else {
         }
     };

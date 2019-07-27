@@ -134,6 +134,7 @@ class PageDraw extends Page {
 
     readSettings(){
         const stored = this.storage.get(this.cookieName);
+        if(!stored){ return; }
         for(let entry of stored.split('|')){
             let entryHash = {}
             for(let field of entry.split(',')){

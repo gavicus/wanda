@@ -94,6 +94,10 @@ class Control {
 
     indicatorsCallback = (message) => {
         console.log('indicatorsCallback',message);
+        if(message === 'update'){
+            this.pageChart.computeIndicators();
+            this.pageChart.show();
+        }
     };
 
     pairsCallback = (message) => {
