@@ -478,7 +478,9 @@ class PageChart extends Page {
         }
     }
 
-    resizeChart(){
+    resizeChart(w,h){
+        if(w){this.styleWidth = w;}
+        if(h){this.styleHeight = h;}
         $(this.root).css('width',this.styleWidth);
         $(this.root).css('height',this.styleHeight);
         $(this.root).attr('width', this.styleWidth * this.rezRatio);
