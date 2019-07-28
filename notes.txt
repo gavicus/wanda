@@ -1,4 +1,5 @@
 todo
+    when you click an entry on the trades chart, the pair menu should update
     create trade interface
         click selection for stop loss and profit target
     drawing trend lines, show line to mouse after first click
