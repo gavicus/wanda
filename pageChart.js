@@ -34,7 +34,7 @@ class PageChart extends Page {
 
         this.colors = {
             wick: '#000',
-            bull: '#2f2',
+            bull: '#0b0',
             bear: '#f22',
             hover: '#fea',
             priceLine: '#777',
