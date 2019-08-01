@@ -4,7 +4,6 @@ class PageChart extends Page {
 
         this.chartSource = new ChartSource(oanda);
         this.chartData = null;
-
         this.pageIndicators = pageIndicators;
         this.context = this.root.getContext('2d');
         this.data = null;
@@ -48,6 +47,16 @@ class PageChart extends Page {
         this.drawingsCookieName = 'o-drawings';
         this.currentDrawing = null;
         this.readDrawings();
+
+        this.newTrade = {
+            direction: 'long',
+            units: 0,
+            risk: 0,
+            pickingStop: false,
+            tempStop: 0,
+            pickingProfit: false,
+            tempProfit: 0,
+        };
         
         this.instrumentListInitialized = false;
         this.init();
@@ -60,9 +69,48 @@ class PageChart extends Page {
         this.show();
     }
 
-    readDrawings(){
-        let cookie = this.storage.get(this.drawingsCookieName);
-        this.drawings = this.cookieToDrawings(cookie);
+    autoCenterChart(){
+        var candles = this.chartData.candles;
+        var high = 0;
+        var low = 0;
+        for(var candle of candles){
+            var candleHigh = parseFloat(candle.mid.h);
+            var candleLow = parseFloat(candle.mid.l);
+            if(!high || candleHigh > high){ high = candleHigh; }
+            if(!low || candleLow < low){ low = candleLow; }
+        }
+        this.high = high;
+        this.low = low;
+        
+        this.focus.y = this.high;
+        this.vZoom = this.high - this.low;
+    }
+    
+    candleToScreen(candle){
+        let index = this.chartData.candles.indexOf(candle);
+        return this.getX(index);
+    }
+
+    computeIndicators(){
+        var candles = this.chartData.candles;
+        var indicators = this.pageIndicators.indicators;
+        for(var indicator of indicators){
+            indicator.values = [];
+            var name = indicator.getName();
+            if(name === 'ma'){
+                var periods = parseInt(indicator.get('periods'));
+                var pool = [];
+                for(var i in candles){
+                    pool.push(candles[i]);
+                    if(pool.length < periods){ continue; }
+                    if(pool.length > periods){ pool.shift(i); }
+                    var prices = pool.map(c=>parseFloat(c.mid.c));
+                    var sum = prices.reduce((a,b)=>a+b);
+                    var avg = sum / pool.length;
+                    indicator.values[i] = avg;
+                }
+            }
+        }
     }
 
     cookieToDrawings(cookie){
@@ -79,6 +127,40 @@ class PageChart extends Page {
             drawings.push(drawing);
         }
         return drawings;
+    }
+
+    createDrawing(where){
+        if(this.drawingTool.tool === 'horiz'){
+            const price = this.screenToPrice(where.y);
+            this.currentDrawing = {
+                pair: this.instrument,
+                type: this.drawingTool.tool,
+                color: '#'+this.drawingTool.color,
+                price: price,
+            };
+            this.addDrawing();
+            this.drawingMode = false;
+        }
+        if(this.drawingTool.tool === 'trend'){
+            const price = this.screenToPrice(where.y);
+            const candle = this.screenToCandle(where.x);
+            const time = candle.time;
+            if(this.currentDrawing){
+                this.currentDrawing['endPrice'] = price;
+                this.currentDrawing['endTime'] = time;
+                this.addDrawing();
+                this.drawingMode = false;
+            } else {
+                this.currentDrawing = {
+                    pair: this.instrument,
+                    type: this.drawingTool.tool,
+                    timeframe: this.timeframe,
+                    color: '#'+this.drawingTool.color,
+                    startPrice: price,
+                    startTime: time,
+                };
+            }
+        }
     }
 
     drawingsToCookie(){
@@ -102,33 +184,76 @@ class PageChart extends Page {
         }
         return cookies.join('|');
     }
-
-    writeDrawings(){
-        const cookie = this.drawingsToCookie();
-        this.storage.set(this.drawingsCookieName, cookie);
-    }
-
-    autoCenterChart(){
-        var candles = this.chartData.candles;
-        var high = 0;
-        var low = 0;
-        for(var candle of candles){
-            var candleHigh = parseFloat(candle.mid.h);
-            var candleLow = parseFloat(candle.mid.l);
-            if(!high || candleHigh > high){ high = candleHigh; }
-            if(!low || candleLow < low){ low = candleLow; }
+    
+    getAccountTradeInfo(){
+        if(this.accountData.trades){
+            const trade = this.accountData.trades.find(
+                t => t.instrument === this.instrument
+            );
+            if(trade){
+                const orders = this.accountData.orders.find(
+                    o => o.tradeId === trade.id
+                );
+                const info = {trade:trade[0], orders:orders};
+                return info;
+            }
         }
-        this.high = high;
-        this.low = low;
-        
-        this.focus.y = this.high;
-        this.vZoom = this.high - this.low;
+        return null;
     }
 
-    updateChartData(){
-        this.chartSource.getChartData(
-            this.instrument, this.timeframe, this.initChartData
-        );
+    getCandleByTime(time){
+        let candle = this.chartData.candles.find(c=>c.time===time);
+        return candle;
+    }
+
+    getCurrentPrice(){
+        const candles = this.chartData.candles;
+        const lastCandle = candles[candles.length-1];
+        return parseFloat(lastCandle.mid.c) || 0;
+    }
+
+    getNewStop(){
+        return parseFloat($('#stop-input').val()) || 0;
+    }
+
+    getPriceAtScreenTop(){
+        return this.focus.y;
+    }
+
+    getPricePerPixel(){
+        return this.getScreenPriceRange() / this.getVisualScreenHeight();
+    }
+
+    getScreenPriceRange(){
+        return this.vZoom;
+    }
+
+    getVisualScreenHeight(){
+        return this.root.height / this.rezRatio;
+    }
+
+    getX(i) {
+        var column = this.chartData.candles.length - i;
+        var x = this.root.width - this.hZoom * column;
+        x -= this.focus.x;
+        return x
+    }
+
+    hoverCandle(candle){
+        this.hovered = candle;
+        if(!candle){ return; }
+        var d = new Date(candle.time);
+        var dateString = (d.getMonth()+1)+'/'+d.getDate();
+        if(this.timeframe.length > 1){
+            dateString += ` ${d.getHours()}:${d.getMinutes()}`;
+        }
+        var message = dateString;
+        message += ` o:${candle.mid.o}`;
+        message += ` c:${candle.mid.c}`;
+        message += ` h:${candle.mid.h}`;
+        message += ` l:${candle.mid.l}`;
+        message += `   ${this.hoveredPrice.toFixed(5)}`;
+        $('#chart-message').html(message);
     }
 
     init = () => {
@@ -145,80 +270,6 @@ class PageChart extends Page {
 
         this.initTradeForm();
     };
-
-    makeElement(tag,parentElem,options){
-        const elem = document.createElement(tag);
-        if(options.attr){
-            for(let key of Object.keys(options.attr)){
-                elem.setAttribute(key, options.attr[key]);
-            }
-        }
-        if(options.style){
-            for(let key of Object.keys(options.style)){
-                elem.style[key] = options.style[key];
-            }
-        }
-        if(options.text){
-            elem.textContent = options.text;
-        }
-        parentElem.append(elem);
-        return elem;
-    }
-
-    makeInputField(name,inputId,parentElem){
-        const field = this.makeElement('div',parentElem,{
-            attr:{class: 'form-field'},
-        });
-        const label = this.makeElement('div',field,{
-            text: name, attr: {class:'label'},
-        });
-        const input = this.makeElement('input',field,{
-            attr: {type:'text',id:inputId,class:'short-input'},
-            style: {display:'inline-block'},
-        });
-        return field;
-    }
-
-    initTradeForm(){
-        const tradeForm = document.createElement('div');
-        tradeForm.setAttribute('id','trade-form');
-
-        const longShort = this.makeElement('button',tradeForm,{
-            text:'long', style:{color:this.colors.darkGreen} });
-        $(longShort).on('click',this.onBtnLongShort);
-
-        const cur = this.makeElement('div',tradeForm,{
-            attr:{class:'form-field'} });
-        const curlab = this.makeElement('div',cur,{
-            text:'current',attr:{class:'label'} });
-        const curval = this.makeElement('div',cur,{
-            attr:{id:'current-value'} });
-
-        const unitsField = this.makeInputField(
-            'units','units-input',tradeForm
-        );
-
-        const riskField = this.makeInputField(
-            'risk','risk-input',tradeForm
-        );
-
-        let makePriceField = (name,parentElem) => {
-            const f = this.makeElement('div',parentElem,{
-                attr:{class:'form-field'} });
-            this.makeElement('div',f,{attr:{class:'label'}, text:name });
-            this.makeElement('input',f,{
-                attr:{id:name+'-input', class:'short-input'} });
-            this.makeElement('button',f,{ text:'chart' });
-            return f;
-        };
-
-        makePriceField('stop',tradeForm);
-        makePriceField('profit',tradeForm);
-
-        const chartWrapper = $('#chart-wrapper');
-        chartWrapper.append(tradeForm);
-        $(tradeForm).hide();
-    }
 
     initChartData = data => {
         this.chartData = data;
@@ -254,6 +305,141 @@ class PageChart extends Page {
 
         menu.val(pairList[0]);
         this.instrument = pairList[0];
+    };
+
+    initTradeForm(){
+        const tradeForm = document.createElement('div');
+        tradeForm.setAttribute('id','trade-form');
+
+        const longShort = this.makeElement('button',tradeForm,{
+            text: 'long',
+            style:{color:this.colors.darkGreen}
+        });
+        $(longShort).on('click',this.onBtnLongShort);
+
+        const cur = this.makeElement('div',tradeForm,{
+            attr:{class:'form-field'} });
+        const curlab = this.makeElement('div',cur,{
+            text:'current',attr:{class:'label'} });
+        const curval = this.makeElement('div',cur,{
+            attr:{id:'current-value'} });
+
+        const unitsField = this.makeInputField(
+            'units','units-input',tradeForm,this.onUnitsKeyUp
+        );
+
+        const riskField = this.makeInputField(
+            'risk','risk-input',tradeForm
+        );
+        $(riskField).on('change',this.onRiskChange);
+
+        let makePriceField = (name,parentElem,btnCallback) => {
+            const f = this.makeElement('div',parentElem,{
+                attr:{class:'form-field'} });
+            this.makeElement('div',f,{attr:{class:'label'}, text:name });
+            this.makeElement('input',f,{
+                attr:{id:name+'-input', class:'short-input'} });
+            const btn = this.makeElement('button',f,{ text:'chart' });
+            btn.setAttribute('id','btn-picking-'+name);
+            btn.setAttribute('class','ml5');
+            $(btn).on('click',btnCallback);
+            return f;
+        };
+
+        makePriceField('stop',tradeForm,this.onBtnStop);
+        makePriceField('profit',tradeForm,this.onBtnProfit);
+
+        const chartWrapper = $('#chart-wrapper');
+        chartWrapper.append(tradeForm);
+        $(tradeForm).hide();
+    }
+
+    makeElement(tag,parentElem,options){
+        const elem = document.createElement(tag);
+        if(options.attr){
+            for(let key of Object.keys(options.attr)){
+                elem.setAttribute(key, options.attr[key]);
+            }
+        }
+        if(options.style){
+            for(let key of Object.keys(options.style)){
+                elem.style[key] = options.style[key];
+            }
+        }
+        if(options.text){
+            elem.textContent = options.text;
+        }
+        parentElem.append(elem);
+        return elem;
+    }
+
+    makeInputField(name,inputId,parentElem,onKeyUp){
+        const field = this.makeElement('div',parentElem,{
+            attr:{class: 'form-field'},
+        });
+        const label = this.makeElement('div',field,{
+            text: name, attr: {class:'label'},
+        });
+        const input = this.makeElement('input',field,{
+            attr: {type:'text',id:inputId,class:'short-input'},
+            style: {display:'inline-block'},
+        });
+        if(onKeyUp){
+            $(input).on('keyup',onKeyUp);
+        }
+        return field;
+    }
+
+    onBtnProfit = event => {
+        if(this.newTrade.pickingProfit){
+            this.setPickingProfit(false);
+        } else {
+            this.setPickingProfit(true);
+            this.setPickingStop(false);
+        }
+    };
+
+    onBtnStop = event => {
+        if(this.newTrade.pickingStop){
+            this.setPickingStop(false);
+        } else {
+            this.setPickingStop(true);
+            this.setPickingProfit(false);
+        }
+    };
+
+    onRiskChange = event => {
+        const risk = parseFloat(event.target.value) || 0;
+        console.log('onRiskChange',risk);
+        if(!risk){ return; }
+        const stop = this.getNewStop();
+        if(!stop){ return; }
+        const current = this.getCurrentPrice();
+        let difference = current - stop;
+        if(this.newTrade.direction === 'short'){
+            difference = -difference;
+        }
+        const count = risk / difference;
+        const unitsInput = $('#units-input');
+        unitsInput.val(parseInt(count));
+        this.onUnitsKeyUp({target: unitsInput});
+    };
+
+    onUnitsKeyUp = event => {
+        const count = parseInt(event.target.value) || 0;
+        console.log('onUnitsKeyUp',count);
+        if(count){
+            this.newTrade.units = count;
+            const stop = this.getNewStop();
+            const current = this.getCurrentPrice();
+            const direction = this.newTrade.direction;
+            let risk = (current - stop) * count;
+            if(direction === 'short'){
+                risk = -risk;
+            }
+            const riskInput = $('#risk-input');
+            riskInput.val(risk.toFixed(5));
+        }
     };
 
     onInstrumentChange = event => {
@@ -323,63 +509,22 @@ class PageChart extends Page {
         $('#chart-message').html('');
     };
 
-    hoverCandle(candle){
-        this.hovered = candle;
-        if(!candle){ return; }
-        var d = new Date(candle.time);
-        var dateString = (d.getMonth()+1)+'/'+d.getDate();
-        if(this.timeframe.length > 1){
-            dateString += ` ${d.getHours()}:${d.getMinutes()}`;
-        }
-        var message = dateString;
-        message += ` o:${candle.mid.o}`;
-        message += ` c:${candle.mid.c}`;
-        message += ` h:${candle.mid.h}`;
-        message += ` l:${candle.mid.l}`;
-        message += `   ${this.hoveredPrice.toFixed(5)}`;
-        $('#chart-message').html(message);
-    }
-
-    createDrawing(where){
-        if(this.drawingTool.tool === 'horiz'){
-            const price = this.screenToPrice(where.y);
-            this.currentDrawing = {
-                pair: this.instrument,
-                type: this.drawingTool.tool,
-                color: '#'+this.drawingTool.color,
-                price: price,
-            };
-            this.addDrawing();
-            this.drawingMode = false;
-        }
-        if(this.drawingTool.tool === 'trend'){
-            const price = this.screenToPrice(where.y);
-            const candle = this.screenToCandle(where.x);
-            const time = candle.time;
-            if(this.currentDrawing){
-                this.currentDrawing['endPrice'] = price;
-                this.currentDrawing['endTime'] = time;
-                this.addDrawing();
-                this.drawingMode = false;
-            } else {
-                this.currentDrawing = {
-                    pair: this.instrument,
-                    type: this.drawingTool.tool,
-                    timeframe: this.timeframe,
-                    color: '#'+this.drawingTool.color,
-                    startPrice: price,
-                    startTime: time,
-                };
-            }
-        }
-    }
-
     onMouseUp = event => {
         this.mouseDown = false;
         this.mouseDragged = false;
         const where = {x:event.offsetX, y:event.offsetY};
         if(this.drawingMode){
             this.createDrawing(where);
+        }
+        else if(this.newTrade.pickingProfit){
+            this.setPickingProfit(false);
+            const price = this.screenToPrice(where.y).toFixed(5);
+            this.setNewProfit(price);
+        }
+        else if(this.newTrade.pickingStop){
+            this.setPickingStop(false);
+            const price = this.screenToPrice(where.y).toFixed(5);
+            this.setNewStop(price);
         }
     };
 
@@ -402,80 +547,12 @@ class PageChart extends Page {
         this.show();
     };
 
-    getPriceAtScreenTop(){
-        return this.focus.y;
-    }
-
-    getPricePerPixel(){
-        return this.getScreenPriceRange() / this.getVisualScreenHeight();
-    }
-
-    getVisualScreenHeight(){
-        return this.root.height / this.rezRatio;
-    }
-
-    getScreenPriceRange(){
-        return this.vZoom;
-    }
-
     priceToScreen(price){
         var atTop = this.getPriceAtScreenTop();
         var range = this.getScreenPriceRange();
         var priceBelowHigh = atTop - price;
         var percentDown = priceBelowHigh / range;
         return this.root.height * percentDown;
-    }
-
-    screenToPrice(yValue){
-        var atTop = this.getPriceAtScreenTop();
-        var range = this.getScreenPriceRange();
-        var percentDown = yValue / (this.root.height / this.rezRatio);
-        return atTop - range * percentDown;
-        var middle = this.root.height / 2;
-        var fromMiddle = yValue - middle;
-        yValue = middle + fromMiddle / this.vZoom;
-        yValue += this.focus.y;
-        var range = this.high - this.low;
-        var h = this.root.height;
-        return (range*(yValue+h) + h*this.low) / h;
-    }
-    
-    getAccountTradeInfo(){
-        if(this.accountData.trades){
-            const trade = this.accountData.trades.find(
-                t => t.instrument === this.instrument
-            );
-            if(trade){
-                const orders = this.accountData.orders.find(
-                    o => o.tradeId === trade.id
-                );
-                const info = {trade:trade[0], orders:orders};
-                return info;
-            }
-        }
-        return null;
-    }
-
-    computeIndicators(){
-        var candles = this.chartData.candles;
-        var indicators = this.pageIndicators.indicators;
-        for(var indicator of indicators){
-            indicator.values = [];
-            var name = indicator.getName();
-            if(name === 'ma'){
-                var periods = parseInt(indicator.get('periods'));
-                var pool = [];
-                for(var i in candles){
-                    pool.push(candles[i]);
-                    if(pool.length < periods){ continue; }
-                    if(pool.length > periods){ pool.shift(i); }
-                    var prices = pool.map(c=>parseFloat(c.mid.c));
-                    var sum = prices.reduce((a,b)=>a+b);
-                    var avg = sum / pool.length;
-                    indicator.values[i] = avg;
-                }
-            }
-        }
     }
 
     resizeChart(w,h){
@@ -497,9 +574,57 @@ class PageChart extends Page {
         return this.chartData.candles[index];
     }
 
+    screenToPrice(yValue){
+        var atTop = this.getPriceAtScreenTop();
+        var range = this.getScreenPriceRange();
+        var percentDown = yValue / (this.root.height / this.rezRatio);
+        return atTop - range * percentDown;
+        var middle = this.root.height / 2;
+        var fromMiddle = yValue - middle;
+        yValue = middle + fromMiddle / this.vZoom;
+        yValue += this.focus.y;
+        var range = this.high - this.low;
+        var h = this.root.height;
+        return (range*(yValue+h) + h*this.low) / h;
+    }
+
     setInstrument(name){
         this.instrument = name;
         this.updateChartData();
+    }
+
+    setNewProfit(price){
+        console.log('profit at',price);
+        $('#profit-input').val(price);
+        this.newTrade.tempProfit = price;
+    }
+
+    setNewStop(price){
+        console.log('stop at',price);
+        $('#stop-input').val(price);
+        this.newTrade.tempStop = price;
+    }
+
+    setPickingProfit(picking){
+        let btn = $('#btn-picking-profit');
+        if(picking){
+            btn.addClass('active');
+            this.newTrade.pickingProfit = true;
+        } else {
+            btn.removeClass('active');
+            this.newTrade.pickingProfit = false;
+        }
+    }
+
+    setPickingStop(picking){
+        let btn = $('#btn-picking-stop');
+        if(picking){
+            btn.addClass('active');
+            this.newTrade.pickingStop = true;
+        } else {
+            btn.removeClass('active');
+            this.newTrade.pickingStop = false;
+        }
     }
 
     setupEvents(){
@@ -514,18 +639,6 @@ class PageChart extends Page {
         $(document).ready(()=>{
             $('#timeframe-menu').val(this.timeframe);
         });
-    }
-    
-    candleToScreen(candle){
-        let index = this.chartData.candles.indexOf(candle);
-        return this.getX(index);
-    }
-
-    getX(i) {
-        var column = this.chartData.candles.length - i;
-        var x = this.root.width - this.hZoom * column;
-        x -= this.focus.x;
-        return x
     }
 
     show = () => {
@@ -687,10 +800,22 @@ class PageChart extends Page {
         this.showDrawings();
     }
 
-    getCurrentPrice(){
-        const candles = this.chartData.candles;
-        const lastCandle = candles[candles.length-1];
-        return lastCandle.mid.c;
+    onBtnLongShort = event => {
+        const btn = event.target;
+        console.log('button html',btn.innerHTML);
+        if(btn.innerHTML === 'long'){
+            btn.innerHTML = 'short';
+            btn.style.color = this.colors.darkRed;
+        } else {
+            btn.innerHTML = 'long';
+            btn.style.color = this.colors.darkGreen;
+        }
+        this.newTrade.direction = btn.innerHTML;
+    };
+
+    readDrawings(){
+        let cookie = this.storage.get(this.drawingsCookieName);
+        this.drawings = this.cookieToDrawings(cookie);
     }
 
     showDrawings(){
@@ -712,23 +837,6 @@ class PageChart extends Page {
             }
         }
     }
-
-    getCandleByTime(time){
-        let candle = this.chartData.candles.find(c=>c.time===time);
-        return candle;
-    }
-
-    onBtnLongShort = event => {
-        const btn = event.target;
-        console.log('button html',btn.innerHTML);
-        if(btn.innerHTML === 'long'){
-            btn.innerHTML = 'short';
-            btn.style.color = this.colors.darkRed;
-        } else {
-            btn.innerHTML = 'long';
-            btn.style.color = this.colors.darkGreen;
-        }
-    };
 
     showTrendLine(drawing){
         if(this.timeframe !== drawing.timeframe){ return; }
@@ -812,6 +920,17 @@ class PageChart extends Page {
             $('#current-value').html(currentPrice);
             form.show();
         }
+    }
+
+    updateChartData(){
+        this.chartSource.getChartData(
+            this.instrument, this.timeframe, this.initChartData
+        );
+    }
+
+    writeDrawings(){
+        const cookie = this.drawingsToCookie();
+        this.storage.set(this.drawingsCookieName, cookie);
     }
 
 }
