@@ -1,5 +1,4 @@
 todo
-    when you click an entry on the trades chart, the pair menu should update
     create trade interface
         click selection for stop loss and profit target
             on set stop loss, if units, risk should be computed
@@ -8,6 +7,8 @@ todo
         if stop loss, changing risk should compute units
         on submit, new trade object should be cleared
         on submit, an actual trade should be created
+    exit trade interface
+    when you click an entry on the trades chart, the pair menu should update
     drawing trend lines, show line to mouse after first click
     allow removal of drawings
 
