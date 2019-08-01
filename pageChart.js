@@ -440,20 +440,22 @@ class PageChart extends Page {
 
     onUnitsKeyUp = event => {
         const count = parseInt(event.target.value) || 0;
-        console.log('onUnitsKeyUp',count);
-        if(count){
-            this.newTrade.units = count;
-            const stop = this.getNewStop();
-            const current = this.getCurrentPrice();
-            const direction = this.newTrade.direction;
-            let risk = (current - stop) * count;
-            if(direction === 'short'){
-                risk = -risk;
-            }
-            const riskInput = $('#risk-input');
-            riskInput.val(risk.toFixed(5));
-        }
+        this.newTrade.units = count;
+        this.updateRiskField();
     };
+
+    updateRiskField(){
+        const count = this.newTrade.units;
+        if(!count){ return; }
+        const stop = this.getNewStop();
+        if(!stop){ return; }
+        const current = this.getCurrentPrice();
+        const direction = this.newTrade.direction;
+        let risk = (current - stop) * count;
+        if(direction === 'short'){ risk = -risk; }
+        const riskInput = $('#risk-input');
+        riskInput.val(risk.toFixed(5));
+    }
 
     onInstrumentChange = event => {
         this.setInstrument(event.target.value);
@@ -621,6 +623,7 @@ class PageChart extends Page {
         console.log('stop at',price);
         $('#stop-input').val(price);
         this.newTrade.tempStop = parseFloat(price);
+        this.updateRiskField();
         this.show();
     }
 
