@@ -390,6 +390,19 @@ class PageChart extends Page {
         return field;
     }
 
+    onBtnLongShort = event => {
+        const btn = event.target;
+        console.log('button html',btn.innerHTML);
+        if(btn.innerHTML === 'long'){
+            btn.innerHTML = 'short';
+            btn.style.color = this.colors.darkRed;
+        } else {
+            btn.innerHTML = 'long';
+            btn.style.color = this.colors.darkGreen;
+        }
+        this.newTrade.direction = btn.innerHTML;
+    };
+
     onBtnProfit = event => {
         if(this.newTrade.pickingProfit){
             this.setPickingProfit(false);
@@ -555,6 +568,11 @@ class PageChart extends Page {
         return this.root.height * percentDown;
     }
 
+    readDrawings(){
+        let cookie = this.storage.get(this.drawingsCookieName);
+        this.drawings = this.cookieToDrawings(cookie);
+    }
+
     resizeChart(w,h){
         if(w){this.styleWidth = w;}
         if(h){this.styleHeight = h;}
@@ -602,7 +620,8 @@ class PageChart extends Page {
     setNewStop(price){
         console.log('stop at',price);
         $('#stop-input').val(price);
-        this.newTrade.tempStop = price;
+        this.newTrade.tempStop = parseFloat(price);
+        this.show();
     }
 
     setPickingProfit(picking){
@@ -798,24 +817,26 @@ class PageChart extends Page {
         this.showCurrentTrade();
 
         this.showDrawings();
+
+        this.showNewTrade();
+
     }
 
-    onBtnLongShort = event => {
-        const btn = event.target;
-        console.log('button html',btn.innerHTML);
-        if(btn.innerHTML === 'long'){
-            btn.innerHTML = 'short';
-            btn.style.color = this.colors.darkRed;
-        } else {
-            btn.innerHTML = 'long';
-            btn.style.color = this.colors.darkGreen;
+    showNewTrade(){
+        if(this.newTrade.tempStop){
+            this.showPriceLine(this.newTrade.tempStop, {
+                color: this.colors.darkRed,
+                dash: [5,20],
+                start: this.root.width / 2,
+            });
         }
-        this.newTrade.direction = btn.innerHTML;
-    };
-
-    readDrawings(){
-        let cookie = this.storage.get(this.drawingsCookieName);
-        this.drawings = this.cookieToDrawings(cookie);
+        if(this.newTrade.tempProfit){
+            this.showPriceLine(this.newTrade.tempProfit, {
+                color: this.colors.darkGreen,
+                dash: [5,20],
+                start: this.root.width / 2,
+            });
+        }
     }
 
     showDrawings(){
@@ -883,10 +904,11 @@ class PageChart extends Page {
         const text = options.text || null;
         const fontSize = options.fontSize || 30;
         const y = this.priceToScreen(price);
+        const start = options.start || 0;
         c.setLineDash(dash);
         c.strokeStyle = color;
         c.beginPath();
-        c.moveTo(0,y);
+        c.moveTo(start,y);
         c.lineTo(this.root.width,y);
         c.stroke();
 
@@ -932,5 +954,4 @@ class PageChart extends Page {
         const cookie = this.drawingsToCookie();
         this.storage.set(this.drawingsCookieName, cookie);
     }
-
 }

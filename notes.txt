@@ -2,9 +2,6 @@ todo
     create trade interface
         click selection for stop loss and profit target
             on set stop loss, if units, risk should be computed
-            on set stop loss, temporary line should show on chart
-        if stop loss, changing units should compute risk
-        if stop loss, changing risk should compute units
         on submit, new trade object should be cleared
         on submit, an actual trade should be created
     exit trade interface
@@ -13,6 +10,11 @@ todo
     allow removal of drawings
 
 done
+    create trade interface
+        if stop loss, changing units should compute risk
+        if stop loss, changing risk should compute units
+        click selection for stop loss and profit target
+            on set stop loss, temporary line should show on chart
     move set token form to a separate page reached by a nav button
     draw horizontals
     draw trend lines
