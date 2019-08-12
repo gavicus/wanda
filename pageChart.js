@@ -483,6 +483,26 @@ class PageChart extends Page {
         this.updateRiskField();
     };
 
+    updateRatioField(){
+        const profit = this.newTrade.tempProfit;
+        if(!profit){ return; }
+        const current = this.getCurrentPrice();
+        const direction = this.newTrade.direction;
+        if(
+            (profit > current && direction === 'short')
+            || (profit < current && direction === 'long')
+        ){
+            this.onBtnLongShort();
+            return this.updateRatioField();
+        }
+        const stop = this.newTrade.tempStop;
+        if(!stop){ return; }
+        const toGain = Math.abs(profit - current);
+        const toLose = Math.abs(current - stop);
+        const ratio = toGain / toLose;
+        console.log('updateRatioField',ratio);
+    }
+
     updateRiskField(){
         const count = this.newTrade.units;
         if(!count){ return; }
@@ -656,25 +676,22 @@ class PageChart extends Page {
     }
 
     setNewProfit(price){
-        console.log('profit at',price);
         if(this.newTrade.tempStop){
             if(!this.validateProfitAndStop(
                 price, this.newTrade.tempStop
-            )){
-                return;
-            }
+            )){ return; }
         }
-        this.newTrade.tempProfit = price;
         $('#profit-input').val(price);
+        this.newTrade.tempProfit = parseFloat(price);
+        this.updateRatioField();
+        this.show();
     }
 
     setNewStop(price){
         if(this.newTrade.tempProfit){
             if(!this.validateProfitAndStop(
                 this.newTrade.tempProfit, price
-            )){
-                return;
-            }
+            )){ return; }
         }
         $('#stop-input').val(price);
         this.newTrade.tempStop = parseFloat(price);
