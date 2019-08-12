@@ -103,6 +103,12 @@ ul {
     color: white;
 }
 
+#reward-risk {
+    margin-top: 5px;
+    height: 25px;
+    width: 150px;
+}
+
 .short-input {
     width: 60px;
 }

@@ -356,6 +356,10 @@ class PageChart extends Page {
         makePriceField('stop',tradeForm,this.onBtnStop);
         makePriceField('profit',tradeForm,this.onBtnProfit);
 
+        this.makeElement('div',tradeForm,{
+            attr: {id: 'reward-risk'},
+        });
+
         let buttonDiv = this.makeElement('div', tradeForm, {
             style: {'margin-top':'5px'},
         });
@@ -484,6 +488,8 @@ class PageChart extends Page {
     };
 
     updateRatioField(){
+        const element = $('#reward-risk')
+        element.html('');
         const profit = this.newTrade.tempProfit;
         if(!profit){ return; }
         const current = this.getCurrentPrice();
@@ -499,8 +505,8 @@ class PageChart extends Page {
         if(!stop){ return; }
         const toGain = Math.abs(profit - current);
         const toLose = Math.abs(current - stop);
-        const ratio = toGain / toLose;
-        console.log('updateRatioField',ratio);
+        const ratio = (toGain / toLose).toFixed(2);
+        element.html('reward : risk  =  '+ratio+' : 1');
     }
 
     updateRiskField(){
@@ -696,6 +702,7 @@ class PageChart extends Page {
         $('#stop-input').val(price);
         this.newTrade.tempStop = parseFloat(price);
         this.updateRiskField();
+        this.updateRatioField();
         this.show();
     }
 
