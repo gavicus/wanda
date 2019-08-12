@@ -1,9 +1,6 @@
 todo
     create trade interface
         when placing profit correct long/short direction
-        toast error message if setting short & profit in same direction
-            (or just clear the first one set)
-        on submit, new trade object should be cleared
         on submit, an actual trade should be created
         show profit-to-risk when profit and stop are set
         clear the form when you change pair
@@ -16,6 +13,9 @@ todo
 
 done
     create trade interface
+        toast error message if setting short & profit in same direction
+            (or just clear the first one set)
+        on submit, new trade object should be cleared
         cancel button exits trade interface
         recompute risk when switching between long & short
         when placing stop correct long/short direction

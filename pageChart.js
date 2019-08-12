@@ -241,6 +241,10 @@ class PageChart extends Page {
         return x
     }
 
+    hideToast(){
+        $('#toast').hide();
+    }
+
     hoverCandle(candle){
         this.hovered = candle;
         if(!candle){ return; }
@@ -653,11 +657,25 @@ class PageChart extends Page {
 
     setNewProfit(price){
         console.log('profit at',price);
-        $('#profit-input').val(price);
+        if(this.newTrade.tempStop){
+            if(!this.validateProfitAndStop(
+                price, this.newTrade.tempStop
+            )){
+                return;
+            }
+        }
         this.newTrade.tempProfit = price;
+        $('#profit-input').val(price);
     }
 
     setNewStop(price){
+        if(this.newTrade.tempProfit){
+            if(!this.validateProfitAndStop(
+                this.newTrade.tempProfit, price
+            )){
+                return;
+            }
+        }
         $('#stop-input').val(price);
         this.newTrade.tempStop = parseFloat(price);
         this.updateRiskField();
@@ -698,6 +716,7 @@ class PageChart extends Page {
         $(document).ready(()=>{
             $('#timeframe-menu').val(this.timeframe);
         });
+        $('#btn-toast-close').on('click',this.hideToast);
     }
 
     show = () => {
@@ -900,6 +919,20 @@ class PageChart extends Page {
         }
     }
 
+    showToast(message, is_error){
+        const toast = $('#toast');
+        const messageElement = $('#toast-message');
+        messageElement.html(message);
+        if(is_error){
+            toast.css("background","#c55");
+            toast.css("color","white");
+        } else {
+            toast.css("background","white");
+            toast.css("color","gray");
+        }
+        toast.show();
+    }
+
     showTrendLine(drawing){
         if(this.timeframe !== drawing.timeframe){ return; }
         const fromCandle = this.getCandleByTime(drawing.startTime);
@@ -989,6 +1022,22 @@ class PageChart extends Page {
         this.chartSource.getChartData(
             this.instrument, this.timeframe, this.initChartData
         );
+    }
+
+    validateProfitAndStop(profit, stop){
+        const current = this.getCurrentPrice();
+        let same = false;
+        if(profit > current && stop > current){
+            same = true;
+        }
+        if(profit < current && stop < current){
+            same = true;
+        }
+        if(same){
+            this.showToast("Stop-loss and profit-goal can't be on the same side of the current price", true);
+            return false;
+        }
+        return true;
     }
 
     writeDrawings(){
