@@ -1,7 +1,7 @@
 todo
     create trade interface
-        on submit, an actual trade should be created
         clear the form when you change pair
+        on submit, an actual trade should be created
     when you click an entry on the trades chart, the pair menu should update
     drawing trend lines, show line to mouse after first click
     allow removal of drawings
@@ -11,6 +11,7 @@ todo
 
 done
     create trade interface
+        clear the form when you change pair
         show profit-to-risk when profit and stop are set
         when placing profit correct long/short direction
         toast error message if setting short & profit in same direction

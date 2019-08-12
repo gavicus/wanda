@@ -91,6 +91,11 @@ class PageChart extends Page {
             pickingProfit: false,
             tempProfit: 0,
         };
+        $('#units-input').val('');
+        $('#risk-input').val('');
+        $('#stop-input').val('');
+        $('#profit-input').val('');
+        $('#reward-risk').html('');
     }
 
     computeIndicators(){
@@ -527,6 +532,7 @@ class PageChart extends Page {
     }
 
     onInstrumentChange = event => {
+        this.clearNewTrade();
         this.setInstrument(event.target.value);
     };
 
