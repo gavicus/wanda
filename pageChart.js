@@ -47,17 +47,7 @@ class PageChart extends Page {
         this.drawingsCookieName = 'o-drawings';
         this.currentDrawing = null;
         this.readDrawings();
-
-        this.newTrade = {
-            direction: 'long',
-            units: 0,
-            risk: 0,
-            pickingStop: false,
-            tempStop: 0,
-            pickingProfit: false,
-            tempProfit: 0,
-        };
-        
+        this.clearNewTrade();
         this.instrumentListInitialized = false;
         this.init();
     }
@@ -89,6 +79,18 @@ class PageChart extends Page {
     candleToScreen(candle){
         let index = this.chartData.candles.indexOf(candle);
         return this.getX(index);
+    }
+
+    clearNewTrade(){
+        this.newTrade = {
+            direction: 'long',
+            units: 0,
+            risk: 0,
+            pickingStop: false,
+            tempStop: 0,
+            pickingProfit: false,
+            tempProfit: 0,
+        };
     }
 
     computeIndicators(){
@@ -313,7 +315,8 @@ class PageChart extends Page {
 
         const longShort = this.makeElement('button',tradeForm,{
             text: 'long',
-            style:{color:this.colors.darkGreen}
+            style:{color:this.colors.darkGreen},
+            attr: {id: 'btn-long-short'},
         });
         $(longShort).on('click',this.onBtnLongShort);
 
@@ -348,6 +351,18 @@ class PageChart extends Page {
 
         makePriceField('stop',tradeForm,this.onBtnStop);
         makePriceField('profit',tradeForm,this.onBtnProfit);
+
+        let buttonDiv = this.makeElement('div', tradeForm, {
+            style: {'margin-top':'5px'},
+        });
+        let cancelButton = this.makeElement('button', buttonDiv, {
+            text: 'cancel',
+        });
+        $(cancelButton).on('click',this.onBtnCancel);
+        let submitButton = this.makeElement('button', buttonDiv, {
+            text: 'submit',
+        });
+        $(submitButton).on('click',this.onBtnSubmit);
 
         const chartWrapper = $('#chart-wrapper');
         chartWrapper.append(tradeForm);
@@ -390,8 +405,27 @@ class PageChart extends Page {
         return field;
     }
 
-    onBtnLongShort = event => {
-        const btn = event.target;
+    onBtnCancel = () => {
+        this.clearNewTrade();
+        this.toggleTradeForm();
+    };
+
+    onBtnSubmit = () => {
+        const count = this.newTrade.units;
+        if(!count){ return; }
+        const current = this.getCurrentPrice();
+        console.log('onBtnSubmit',this.newTrade);
+        console.log('current', current);
+
+        // TODO: create an actual trade
+
+        this.clearNewTrade();
+        this.toggleTradeForm();
+    };
+
+    onBtnLongShort = () => {
+        // const btn = event.target;
+        const btn = $('#btn-long-short')[0];
         console.log('button html',btn.innerHTML);
         if(btn.innerHTML === 'long'){
             btn.innerHTML = 'short';
@@ -401,6 +435,7 @@ class PageChart extends Page {
             btn.style.color = this.colors.darkGreen;
         }
         this.newTrade.direction = btn.innerHTML;
+        this.updateRiskField();
     };
 
     onBtnProfit = event => {
@@ -453,6 +488,10 @@ class PageChart extends Page {
         const direction = this.newTrade.direction;
         let risk = (current - stop) * count;
         if(direction === 'short'){ risk = -risk; }
+        if(risk < 0){
+            this.onBtnLongShort();
+            return this.updateRiskField();
+        }
         const riskInput = $('#risk-input');
         riskInput.val(risk.toFixed(5));
     }
@@ -555,7 +594,6 @@ class PageChart extends Page {
             var zoomChange = delta * perPix;
             this.vZoom += zoomChange;
             this.focus.y += zoomChange / 2;
-
             const minZoom = 0;
             if(this.vZoom < minZoom){ this.vZoom = minZoom; }
         }
@@ -620,7 +658,6 @@ class PageChart extends Page {
     }
 
     setNewStop(price){
-        console.log('stop at',price);
         $('#stop-input').val(price);
         this.newTrade.tempStop = parseFloat(price);
         this.updateRiskField();
@@ -690,7 +727,8 @@ class PageChart extends Page {
                 return a.getDay() == 4;
             }
             if(this.timeframe === 'W'){
-                return a.getMonth() !== b.getMonth();
+                // return a.getMonth() !== b.getMonth();
+                return a.getYear() !== b.getYear();
             }
             if(this.timeframe === 'M'){
                 return a.getYear() !== b.getYear();

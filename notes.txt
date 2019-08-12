@@ -1,15 +1,24 @@
 todo
     create trade interface
+        when placing profit correct long/short direction
+        toast error message if setting short & profit in same direction
+            (or just clear the first one set)
         on submit, new trade object should be cleared
-        on cancel, new trade object should be cleared
         on submit, an actual trade should be created
-    exit trade interface
+        show profit-to-risk when profit and stop are set
+        clear the form when you change pair
     when you click an entry on the trades chart, the pair menu should update
     drawing trend lines, show line to mouse after first click
     allow removal of drawings
+    indicators don't stay hidden
+    give vertical hover column a darker or bolder color
+    draw candles over indicators
 
 done
     create trade interface
+        cancel button exits trade interface
+        recompute risk when switching between long & short
+        when placing stop correct long/short direction
         if stop loss, changing units should compute risk
         if stop loss, changing risk should compute units
         click selection for stop loss and profit target

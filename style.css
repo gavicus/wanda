@@ -87,12 +87,20 @@ ul {
     border: 1px solid gray;
     background-color: white;
     width: 160px;
-    height: 140px;
     position: absolute;
     top: 100px;
     left: 10px;
     z-index: 5;
     padding: 5px;
+}
+
+#trade-form button {
+    outline: none;
+}
+
+#trade-form button:hover {
+    background-color: blue;
+    color: white;
 }
 
 .short-input {
