@@ -774,7 +774,6 @@ class PageChart extends Page {
                 return a.getDay() == 4;
             }
             if(this.timeframe === 'W'){
-                // return a.getMonth() !== b.getMonth();
                 return a.getYear() !== b.getYear();
             }
             if(this.timeframe === 'M'){
@@ -805,6 +804,33 @@ class PageChart extends Page {
                 this.hoveredPrice,
                 {dash:[15,15], color:'#88f'},
             );
+        }
+
+        // indicators
+        var indicators = this.pageIndicators.indicators;
+        for(var indicator of indicators){
+            if(!indicator.getShown()){ continue; }
+            var name = indicator.getName();
+            if(name === 'ma'){
+                c.setLineDash([]);
+                c.beginPath();
+                c.lineWidth = 3;
+                var first = true;
+                if(!indicator.values){
+                    console.log('indicator has no values',indicator);
+                }
+                for(var i in indicator.values){
+                    var avg = indicator.values[i];
+                    var x = this.getX(i);
+                    var y = this.priceToScreen(avg);
+                    c.strokeStyle = '#'+indicator.get('color');
+                    if(first){
+                        c.moveTo(x,y);
+                        first = false;
+                    } else { c.lineTo(x,y); }
+                }
+                c.stroke();
+            }
         }
 
         // candles
@@ -868,33 +894,6 @@ class PageChart extends Page {
             text = text.toLowerCase();
             c.textBaseline = "alphabetic";
             c.fillText(text, 10, fontSize);
-        }
-
-        // indicators
-        var indicators = this.pageIndicators.indicators;
-        for(var indicator of indicators){
-            if(!indicator.getShown()){ continue; }
-            var name = indicator.getName();
-            if(name === 'ma'){
-                c.setLineDash([]);
-                c.beginPath();
-                c.lineWidth = 3;
-                var first = true;
-                if(!indicator.values){
-                    console.log('indicator has no values',indicator);
-                }
-                for(var i in indicator.values){
-                    var avg = indicator.values[i];
-                    var x = this.getX(i);
-                    var y = this.priceToScreen(avg);
-                    c.strokeStyle = '#'+indicator.get('color');
-                    if(first){
-                        c.moveTo(x,y);
-                        first = false;
-                    } else { c.lineTo(x,y); }
-                }
-                c.stroke();
-            }
         }
 
         // current price

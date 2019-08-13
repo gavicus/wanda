@@ -5,9 +5,9 @@ todo
     allow removal of drawings
     indicators don't stay hidden
     give vertical hover column a darker or bolder color
-    draw candles over indicators
 
 done
+    draw candles over indicators
     when you click an entry on the trades chart, update the pair menu
     create trade interface
         clear the form when you change pair
