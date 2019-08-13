@@ -5,9 +5,10 @@ class Indicator {
     }
 
     fromString(s){
-        var pairs = s.split(',');
-        for(var pair of pairs){
-            var [key,value] = pair.split(':');
+        let pairs = s.split(',');
+        for(let pair of pairs){
+            let [key,value] = pair.split(':');
+            if(value === 'false'){ value = false; }
             this.fields[key] = value;
         }
     }

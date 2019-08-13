@@ -210,6 +210,7 @@ class PageIndicators extends Page {
         if(!stored){ return; }
         var entries = stored.split('|');
         this.indicators = entries.map(e => new Indicator(e));
+        console.log('readStored',this.indicators);
     }
 
     writeToStored(){
@@ -217,6 +218,7 @@ class PageIndicators extends Page {
             .map(i => i.toString())
             .join('|');
         this.storage.set(this.cookieName,indString);
+        console.log('writeToStored',this.indicators);
     }
 }
 

@@ -295,7 +295,6 @@ class PageChart extends Page {
     };
 
     initInstrumentList = () => {
-        console.log('this.instrument',this.instrument);
         if(this.instrumentListInitialized){ return; }
         this.instrumentListInitialized = true;
         var pairList = [];
@@ -436,7 +435,6 @@ class PageChart extends Page {
     onBtnLongShort = () => {
         // const btn = event.target;
         const btn = $('#btn-long-short')[0];
-        console.log('button html',btn.innerHTML);
         if(btn.innerHTML === 'long'){
             btn.innerHTML = 'short';
             btn.style.color = this.colors.darkRed;
@@ -468,7 +466,6 @@ class PageChart extends Page {
 
     onRiskChange = event => {
         const risk = parseFloat(event.target.value) || 0;
-        console.log('onRiskChange',risk);
         if(!risk){ return; }
         const stop = this.getNewStop();
         if(!stop){ return; }
