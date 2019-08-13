@@ -1,8 +1,6 @@
 todo
     create trade interface
-        clear the form when you change pair
         on submit, an actual trade should be created
-    when you click an entry on the trades chart, the pair menu should update
     drawing trend lines, show line to mouse after first click
     allow removal of drawings
     indicators don't stay hidden
@@ -10,6 +8,7 @@ todo
     draw candles over indicators
 
 done
+    when you click an entry on the trades chart, update the pair menu
     create trade interface
         clear the form when you change pair
         show profit-to-risk when profit and stop are set

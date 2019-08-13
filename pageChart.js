@@ -294,6 +294,7 @@ class PageChart extends Page {
     };
 
     initInstrumentList = () => {
+        console.log('this.instrument',this.instrument);
         if(this.instrumentListInitialized){ return; }
         this.instrumentListInitialized = true;
         var pairList = [];
@@ -311,11 +312,6 @@ class PageChart extends Page {
             option.textContent = pair.replace('_','/');
             menu.append(option);
         }
-        menu.on('change',this.onInstrumentChange);
-        $('#instrument-menu').val(this.instrument);
-
-        menu.val(pairList[0]);
-        this.instrument = pairList[0];
     };
 
     initTradeForm(){
@@ -685,6 +681,7 @@ class PageChart extends Page {
     setInstrument(name){
         this.instrument = name;
         this.updateChartData();
+        $('#instrument-menu').val(name);
     }
 
     setNewProfit(price){
@@ -735,6 +732,7 @@ class PageChart extends Page {
     }
 
     setupEvents(){
+        $('#instrument-menu').on('change',this.onInstrumentChange);
         var canvas = this.root;
         this.root.addEventListener('mousedown', this.onMouseDown);
         this.root.addEventListener('mousemove', this.onMouseMove);

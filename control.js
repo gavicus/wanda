@@ -113,8 +113,11 @@ class Control {
     };
 
     tradesCallback = (message,data) => {
-        this.pageChart.setInstrument(data);
-        this.onBtnChart();
+        if(message === 'show-chart'){
+            console.log('tradesCallback',data);
+            this.pageChart.setInstrument(data);
+            this.onBtnChart();
+        }
     };
 
     setToken(t){
