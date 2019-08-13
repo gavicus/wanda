@@ -32,13 +32,14 @@ class PageChart extends Page {
         this.hZoom = 10; // = column width
 
         this.colors = {
+            background: '#fdfdfd',
             wick: '#000',
             bull: '#2f2',
             bear: '#f22',
-            hover: '#fea',
+            hover: '#fe4',
             priceLine: '#777',
             currentPrice: '#68f',
-            dateZone: '#efefef',
+            dateZone: '#f6f6f6',
             darkGreen: '#090',
             darkRed: '#b00',
         };
@@ -749,7 +750,7 @@ class PageChart extends Page {
 
     show = () => {
         var c = this.context;
-        c.fillStyle = '#fafafa';
+        c.fillStyle = this.colors.background;
         c.fillRect(0,0,this.root.width,this.root.height);
 
         var candles = this.chartData.candles;
